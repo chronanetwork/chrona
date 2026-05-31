@@ -22,6 +22,7 @@ async function scoreWallet(address: string) {
     cluster: config.cluster,
     maxSigPages: config.maxSigPages,
     maxTxPages: config.maxTxPages,
+    budgetMs: config.budgetMs,
   });
   const breakdown = computeScore(measurement);
   return { measurement, breakdown };

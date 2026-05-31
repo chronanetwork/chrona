@@ -59,9 +59,13 @@ export interface SignedAttestation {
   measurement?: any;
 }
 
+const SCORER_TIMEOUT_MS = 30_000;
+
 /** Preview a wallet's score (no signature). */
 export async function previewScore(wallet: string): Promise<any> {
-  const res = await fetch(`${SCORER_URL}/score/${wallet}`);
+  const res = await fetch(`${SCORER_URL}/score/${wallet}`, {
+    signal: AbortSignal.timeout(SCORER_TIMEOUT_MS),
+  });
   if (!res.ok) throw new Error(`scorer: ${res.status}`);
   return res.json();
 }
@@ -72,6 +76,7 @@ export async function fetchAttestation(wallet: string): Promise<SignedAttestatio
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ wallet }),
+    signal: AbortSignal.timeout(SCORER_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`scorer: ${res.status}`);
   return res.json();
