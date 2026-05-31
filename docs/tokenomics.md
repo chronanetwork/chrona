@@ -6,7 +6,7 @@ Kairo's emission is a continuous halving curve — Bitcoin's shape, recalibrated
 
 | Parameter | Value |
 |---|---|
-| Decimals | 9 |
+| Decimals | 6 |
 | Genesis / launch supply (premine) | 100,000 KAIRO |
 | Hard cap (asymptote) | 21,000,000 KAIRO |
 | Mineable total | 20,900,000 KAIRO |
@@ -48,12 +48,12 @@ So the curve is pinned by two facts the project wanted: **30,000 KAIRO on day on
 
 ## On-chain representation
 
-All amounts are in base units (1 KAIRO = 1e9 base units). Time is `Clock.unix_timestamp` (seconds).
+All amounts are in base units (1 KAIRO = 1e6 base units). Time is `Clock.unix_timestamp` (seconds).
 
 ```
-ASYMPTOTE_BASE = 20_900_000 * 1e9   // mineable cap, program-minted
-H_SECONDS      = 41_721_915         // 482.8925 days
-PREMINE_BASE   = 100_000   * 1e9    // minted outside the program (DBC / devnet)
+ASYMPTOTE_BASE = 20_900_000 * 1e6   // mineable cap, program-minted
+H_SECONDS      = 41_721_912         // 482.8925 days
+PREMINE_BASE   = 100_000   * 1e6    // minted outside the program (DBC / devnet)
 ```
 
 The program never loops over blocks. The reward injected into the mining pool between two timestamps is the **closed-form difference** `ΔE = E(t_now) − E(t_last)`, which is exact across any number of halvings. `ΔE` is always floored to base units and clamped so cumulative program-minted supply can never exceed `ASYMPTOTE_BASE`. See [scoring-spec.md](scoring-spec.md) for hash rate and [architecture.md](architecture.md) for the accumulator.

@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
 
+pub mod constants;
+pub mod math;
+
 declare_id!("6MS8n87aRsXE5RjyVXuf9wcfARn5ut4m2YhBFE3kairo");
 
 /// Kairo — a Proof-of-Activity mined SPL token.
