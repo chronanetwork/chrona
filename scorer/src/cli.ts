@@ -18,8 +18,8 @@ async function main() {
     const measurement = await measureWallet(wallet, {
       apiKey: config.heliusApiKey,
       cluster: config.cluster,
-      maxSigPages: config.maxSigPages,
       maxTxPages: config.maxTxPages,
+      budgetMs: config.budgetMs,
     });
     const breakdown = computeScore(measurement);
     console.log(`\n=== ${wallet} ===`);
@@ -35,7 +35,7 @@ async function main() {
     console.log("meta:", {
       solPriceUsd: measurement.solPriceUsd,
       swapsScanned: measurement.swapsScanned,
-      sigsScanned: measurement.totalSignaturesScanned,
+      txScanned: measurement.txScanned,
       capped: measurement.capped,
     });
   }

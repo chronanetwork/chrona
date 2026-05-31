@@ -9,7 +9,7 @@ The open-source, deterministic service that turns a wallet's public Solana histo
 src/
 ├── index.ts     HTTP server (GET /score preview, POST /score signed)
 ├── score.ts     deterministic scoring (the spec, in code)
-├── helius.ts    Helius client: signatures, Enhanced Tx, DAS
+├── helius.ts    Helius getTransactionsForAddress: age + token-aware activity
 ├── pricing.ts   historical USD pricing (pinned source, fixed rounding)
 ├── attest.ts    ed25519 attestation signing
 └── schema.ts    zod types + canonical attestation byte layout

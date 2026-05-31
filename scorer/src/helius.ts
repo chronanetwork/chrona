@@ -1,4 +1,4 @@
-import { MIN_TRADE_USD } from "@kairo/sdk";
+import { AGE_CAP_DAYS, MIN_TRADE_USD } from "@kairo/sdk";
 import type { WalletActivity } from "./score";
 import { getSolPriceUsd } from "./pricing";
 
@@ -7,16 +7,17 @@ const WSOL = "So11111111111111111111111111111111111111112";
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const USDT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const STABLES = new Set([USDC, USDT]);
+const QUOTE = new Set([WSOL, USDC, USDT]);
 
-const SIG_PAGE = 1000;
-const TX_PAGE = 100;
-const REQUEST_TIMEOUT_MS = 8000;
+const TX_LIMIT = 1000; // gTFA returns up to 1000 full txs per call
+const SHORT_TIMEOUT_MS = 8_000;
+const FULL_TIMEOUT_MS = 15_000; // full-transaction payloads are larger
 
 export interface MeasureOptions {
   apiKey: string;
   /** "mainnet" (default — wallets are scored on mainnet activity) or "devnet". */
   cluster?: "mainnet" | "devnet";
-  maxSigPages?: number;
+  /** Max pages of full transactions to scan for trades/volume/hold. */
   maxTxPages?: number;
   /** Override SOL/USD (pins pricing for reproducibility). */
   solPriceUsd?: number;
@@ -29,9 +30,9 @@ export interface MeasureOptions {
 export interface Measurement extends WalletActivity {
   solPriceUsd: number;
   oldestTs: number | null;
-  totalSignaturesScanned: number;
+  txScanned: number;
   swapsScanned: number;
-  capped: { signatures: boolean; transactions: boolean };
+  capped: { transactions: boolean };
 }
 
 function rpcUrl(cluster: string, apiKey: string): string {
@@ -41,19 +42,25 @@ function rpcUrl(cluster: string, apiKey: string): string {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** fetch + parse JSON with a per-request timeout and one retry on failure. */
-async function fetchJson(url: string, init: RequestInit = {}): Promise<any> {
+/** POST JSON-RPC with a per-request timeout and one retry on 429/5xx. */
+async function rpc(url: string, method: string, params: unknown[], timeoutMs: number): Promise<any> {
   let lastErr: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(url, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
       if (res.status === 429 || res.status >= 500) {
         lastErr = new Error(`HTTP ${res.status}`);
         await sleep(400);
         continue;
       }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
+      const json = await res.json();
+      if (json.error) throw new Error(`${method}: ${JSON.stringify(json.error)}`);
+      return json.result;
     } catch (e) {
       lastErr = e;
       await sleep(300);
@@ -62,94 +69,66 @@ async function fetchJson(url: string, init: RequestInit = {}): Promise<any> {
   throw lastErr ?? new Error("request failed");
 }
 
-async function rpc(url: string, method: string, params: unknown[]): Promise<any> {
-  const json = await fetchJson(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-  });
-  if (json.error) throw new Error(`${method}: ${JSON.stringify(json.error)}`);
-  return json.result;
-}
-
-/** Scan signatures to find the wallet's earliest transaction timestamp. */
-async function findOldestTs(
-  url: string,
-  address: string,
-  maxPages: number,
-  deadline: number,
-): Promise<{ oldestTs: number | null; scanned: number; capped: boolean }> {
-  let before: string | undefined;
-  let oldestTs: number | null = null;
-  let scanned = 0;
-  for (let page = 0; page < maxPages; page++) {
-    if (Date.now() > deadline) return { oldestTs, scanned, capped: true };
-    const opts: Record<string, unknown> = { limit: SIG_PAGE };
-    if (before) opts.before = before;
-    const sigs: any[] = await rpc(url, "getSignaturesForAddress", [address, opts]);
-    if (!sigs.length) return { oldestTs, scanned, capped: false };
-    scanned += sigs.length;
-    const last = sigs[sigs.length - 1];
-    if (typeof last.blockTime === "number") oldestTs = last.blockTime;
-    before = last.signature;
-    if (sigs.length < SIG_PAGE) return { oldestTs, scanned, capped: false };
-  }
-  return { oldestTs, scanned, capped: true };
-}
-
-/** Fetch parsed (enhanced) transactions, newest first, bounded by pages/deadline. */
-async function fetchEnhanced(
-  apiKey: string,
-  address: string,
-  maxPages: number,
-  deadline: number,
-): Promise<{ txs: any[]; capped: boolean }> {
-  const txs: any[] = [];
-  let before: string | undefined;
-  let capped = false;
-  for (let page = 0; page < maxPages; page++) {
-    if (Date.now() > deadline) {
-      capped = true;
-      break;
-    }
-    const u = new URL(`https://api.helius.xyz/v0/addresses/${address}/transactions`);
-    u.searchParams.set("api-key", apiKey);
-    u.searchParams.set("limit", String(TX_PAGE));
-    if (before) u.searchParams.set("before", before);
-    const page_txs: any[] = await fetchJson(u.toString());
-    if (!Array.isArray(page_txs) || page_txs.length === 0) break;
-    txs.push(...page_txs);
-    before = page_txs[page_txs.length - 1].signature;
-    if (page_txs.length < TX_PAGE) break;
-    if (page === maxPages - 1) capped = true;
-  }
-  return { txs, capped };
-}
-
-/** Net per-mint and native-SOL deltas for `wallet` within one enhanced tx. */
-function txDeltas(tx: any, wallet: string) {
-  const tokenDelta = new Map<string, number>();
-  let solDelta = 0; // lamports
-  for (const t of tx.tokenTransfers ?? []) {
-    const amt = Number(t.tokenAmount) || 0;
-    if (t.toUserAccount === wallet) tokenDelta.set(t.mint, (tokenDelta.get(t.mint) ?? 0) + amt);
-    if (t.fromUserAccount === wallet) tokenDelta.set(t.mint, (tokenDelta.get(t.mint) ?? 0) - amt);
-  }
-  for (const n of tx.nativeTransfers ?? []) {
-    const amt = Number(n.amount) || 0;
-    if (n.toUserAccount === wallet) solDelta += amt;
-    if (n.fromUserAccount === wallet) solDelta -= amt;
-  }
-  return { tokenDelta, solDelta };
+/** Helius getTransactionsForAddress. */
+function gtfa(url: string, address: string, opts: Record<string, unknown>, timeoutMs: number) {
+  return rpc(url, "getTransactionsForAddress", [address, opts], timeoutMs);
 }
 
 /**
- * Measure a wallet's activity for scoring. Runs the signature scan, the
- * enhanced-transaction scan, and the SOL price fetch concurrently, each with
- * per-request timeouts, and stops paging once `budgetMs` elapses (flagging
- * `capped`). It therefore always returns within roughly the budget rather than
- * hanging. Each swap is valued by its quote leg (SOL at `solPriceUsd`, stables
- * at $1), so no per-token price feed is needed.
+ * Net SOL (lamports) and per-mint token deltas for `wallet` in one full tx,
+ * derived from balance metadata — robust across every DEX program.
+ */
+/** UI token amount, robust to `uiAmount` being null (common in gTFA). */
+function uiAmount(b: any): number {
+  const u = b?.uiTokenAmount;
+  if (!u) return 0;
+  if (u.uiAmount != null) return Number(u.uiAmount);
+  if (u.uiAmountString != null) return Number(u.uiAmountString);
+  const raw = Number(u.amount) || 0;
+  const dec = Number(u.decimals) || 0;
+  return raw / 10 ** dec;
+}
+
+function txDeltas(entry: any, wallet: string) {
+  const meta = entry.meta;
+  const msg = entry.transaction?.message;
+  const tokenDelta = new Map<string, number>();
+  let solDelta = 0;
+  if (!meta) return { solDelta, tokenDelta };
+
+  // Native SOL: locate the wallet across static + loaded (v0) account keys.
+  const staticKeys = (msg?.accountKeys ?? []).map((k: any) => (typeof k === "string" ? k : k.pubkey));
+  const loaded = meta.loadedAddresses;
+  const keys = [...staticKeys, ...(loaded?.writable ?? []), ...(loaded?.readonly ?? [])];
+  const idx = keys.indexOf(wallet);
+  if (idx >= 0 && meta.preBalances && meta.postBalances) {
+    solDelta = (Number(meta.postBalances[idx]) || 0) - (Number(meta.preBalances[idx]) || 0);
+  }
+
+  // Token balances carry `owner` directly (post Dec-2022). Match pre/post by accountIndex.
+  const pre = new Map<number, any>();
+  for (const b of meta.preTokenBalances ?? []) if (b.owner === wallet) pre.set(b.accountIndex, b);
+  for (const b of meta.postTokenBalances ?? []) {
+    if (b.owner !== wallet) continue;
+    const prev = pre.get(b.accountIndex);
+    const delta = uiAmount(b) - (prev ? uiAmount(prev) : 0);
+    tokenDelta.set(b.mint, (tokenDelta.get(b.mint) ?? 0) + delta);
+    pre.delete(b.accountIndex);
+  }
+  // Accounts present pre but not post (closed to zero).
+  for (const [, b] of pre) {
+    tokenDelta.set(b.mint, (tokenDelta.get(b.mint) ?? 0) - uiAmount(b));
+  }
+  return { solDelta, tokenDelta };
+}
+
+/**
+ * Measure a wallet's mainnet activity for scoring using Helius
+ * `getTransactionsForAddress`: one call for age (oldest tx), then bounded pages
+ * of full, token-account-aware (`balanceChanged`) transactions for
+ * trades/volume/hold. Swaps are detected from real balance deltas (a quote leg
+ * moving opposite a non-quote token), valuing each by its quote leg. Per-request
+ * timeouts + an overall budget guarantee a bounded response time.
  */
 export async function measureWallet(
   address: string,
@@ -158,60 +137,121 @@ export async function measureWallet(
   const cluster = options.cluster ?? "mainnet";
   const url = rpcUrl(cluster, options.apiKey);
   const nowSecs = options.nowSecs ?? Math.floor(Date.now() / 1000);
-  const maxSigPages = options.maxSigPages ?? 5;
-  const maxTxPages = options.maxTxPages ?? 5;
+  const maxTxPages = options.maxTxPages ?? 2;
   const deadline = Date.now() + (options.budgetMs ?? 20_000);
 
-  // Independent — run concurrently.
-  const [sig, enhanced, solPriceUsd] = await Promise.all([
-    findOldestTs(url, address, maxSigPages, deadline),
-    fetchEnhanced(options.apiKey, address, maxTxPages, deadline),
-    options.solPriceUsd !== undefined
-      ? Promise.resolve(options.solPriceUsd)
-      : getSolPriceUsd(),
+  // Age (oldest tx) + recent full activity + SOL price, concurrently.
+  const oldestPromise = gtfa(
+    url,
+    address,
+    { transactionDetails: "signatures", sortOrder: "asc", limit: 1, maxSupportedTransactionVersion: 0 },
+    SHORT_TIMEOUT_MS,
+  )
+    .then((r: any) => r?.data?.[0] ?? null)
+    .catch(() => null);
+
+  const activityPromise = (async () => {
+    const txs: any[] = [];
+    let token: string | null = null;
+    let capped = false;
+    for (let page = 0; page < maxTxPages; page++) {
+      if (Date.now() > deadline) {
+        capped = true;
+        break;
+      }
+      const opts: Record<string, unknown> = {
+        transactionDetails: "full",
+        encoding: "jsonParsed",
+        maxSupportedTransactionVersion: 0,
+        sortOrder: "desc",
+        limit: TX_LIMIT,
+        filters: { status: "succeeded", tokenAccounts: "balanceChanged" },
+      };
+      if (token) opts.paginationToken = token;
+      const r: any = await gtfa(url, address, opts, FULL_TIMEOUT_MS);
+      const data: any[] = r?.data ?? [];
+      txs.push(...data);
+      token = r?.paginationToken ?? null;
+      if (!token || data.length < TX_LIMIT) break;
+      if (page === maxTxPages - 1) capped = true;
+    }
+    return { txs, capped };
+  })();
+
+  const solPricePromise =
+    options.solPriceUsd !== undefined ? Promise.resolve(options.solPriceUsd) : getSolPriceUsd();
+
+  const [oldestEntry, activity, solPriceUsd] = await Promise.all([
+    oldestPromise,
+    activityPromise,
+    solPricePromise,
   ]);
 
-  const ageDays = sig.oldestTs ? Math.max(0, (nowSecs - sig.oldestTs) / 86_400) : 0;
+  // A first tx with no blockTime predates reliable archival → the wallet is
+  // ancient, so age maxes out. No first tx at all → unused wallet, age 0.
+  const oldestTs: number | null = oldestEntry?.blockTime ?? null;
+  const ageDays = oldestTs
+    ? Math.max(0, (nowSecs - oldestTs) / 86_400)
+    : oldestEntry
+      ? AGE_CAP_DAYS
+      : 0;
 
-  // Process chronologically for hold-time tracking.
-  const txs = enhanced.txs.sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
+  // Walk chronologically for hold-time tracking.
+  const txs = activity.txs.sort((a, b) => (a.blockTime ?? 0) - (b.blockTime ?? 0));
 
   let nTrades = 0;
   let usdVolume = 0;
   let swapsScanned = 0;
-  const openTs = new Map<string, number>(); // mint -> acquisition ts of open position
-  const holdDurations: number[] = []; // days
+  const openTs = new Map<string, number>();
+  const holdDurations: number[] = [];
 
   for (const tx of txs) {
-    const isSwap = tx.type === "SWAP" || tx.events?.swap;
-    if (!isSwap) continue;
-    swapsScanned++;
-    const ts = Number(tx.timestamp) || nowSecs;
-    const { tokenDelta, solDelta } = txDeltas(tx, address);
+    const ts = Number(tx.blockTime) || nowSecs;
+    const { solDelta, tokenDelta } = txDeltas(tx, address);
 
-    let quoteUsd = (Math.abs(solDelta) / 1e9) * solPriceUsd;
-    for (const [mint, d] of tokenDelta) {
-      if (mint === WSOL) quoteUsd = Math.max(quoteUsd, Math.abs(d) * solPriceUsd);
-      else if (STABLES.has(mint)) quoteUsd = Math.max(quoteUsd, Math.abs(d));
+    // Quote-leg value (USD) and whether quote was spent or received.
+    let quoteUsd = 0;
+    let quoteSpent = false;
+    let quoteReceived = false;
+    const solUsd = (Math.abs(solDelta) / 1e9) * solPriceUsd;
+    if (solUsd > 0) {
+      quoteUsd = Math.max(quoteUsd, solUsd);
+      if (solDelta < 0) quoteSpent = true;
+      else if (solDelta > 0) quoteReceived = true;
     }
-    if (quoteUsd < MIN_TRADE_USD) continue;
+    for (const [mint, d] of tokenDelta) {
+      if (!QUOTE.has(mint)) continue;
+      const v = mint === WSOL ? Math.abs(d) * solPriceUsd : Math.abs(d);
+      quoteUsd = Math.max(quoteUsd, v);
+      if (d < 0) quoteSpent = true;
+      else if (d > 0) quoteReceived = true;
+    }
 
+    // Non-quote token legs.
+    let boughtMint: string | null = null;
+    let soldMint: string | null = null;
+    for (const [mint, d] of tokenDelta) {
+      if (QUOTE.has(mint) || Math.abs(d) < 1e-9) continue;
+      if (d > 0) boughtMint = mint;
+      else soldMint = mint;
+    }
+
+    const isBuy = quoteSpent && boughtMint !== null;
+    const isSell = quoteReceived && soldMint !== null;
+    if ((!isBuy && !isSell) || quoteUsd < MIN_TRADE_USD) continue;
+
+    swapsScanned++;
     nTrades++;
     usdVolume += quoteUsd;
 
-    const quoteSpent = solDelta < 0 || isQuoteSpent(tokenDelta);
-    for (const [mint, d] of tokenDelta) {
-      if (mint === WSOL || STABLES.has(mint)) continue;
-      if (d > 0 && quoteSpent) {
-        if (!openTs.has(mint)) openTs.set(mint, ts);
-      } else if (d < 0 && openTs.has(mint)) {
-        const days = Math.max(0, (ts - (openTs.get(mint) as number)) / 86_400);
-        holdDurations.push(days);
-        openTs.delete(mint);
-      }
+    if (isBuy && boughtMint && !openTs.has(boughtMint)) openTs.set(boughtMint, ts);
+    if (isSell && soldMint && openTs.has(soldMint)) {
+      holdDurations.push(Math.max(0, (ts - (openTs.get(soldMint) as number)) / 86_400));
+      openTs.delete(soldMint);
     }
   }
 
+  // Still-open bought positions count toward hold time (acquisition → now).
   for (const [, ts] of openTs) {
     holdDurations.push(Math.max(0, (nowSecs - ts) / 86_400));
   }
@@ -222,18 +262,11 @@ export async function measureWallet(
     usdVolume,
     medianHoldDays: median(holdDurations),
     solPriceUsd,
-    oldestTs: sig.oldestTs,
-    totalSignaturesScanned: sig.scanned,
+    oldestTs,
+    txScanned: txs.length,
     swapsScanned,
-    capped: { signatures: sig.capped, transactions: enhanced.capped },
+    capped: { transactions: activity.capped },
   };
-}
-
-function isQuoteSpent(tokenDelta: Map<string, number>): boolean {
-  for (const [mint, d] of tokenDelta) {
-    if ((mint === WSOL || STABLES.has(mint)) && d < 0) return true;
-  }
-  return false;
 }
 
 function median(xs: number[]): number {

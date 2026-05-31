@@ -4,7 +4,11 @@ A wallet's **score** is its **hash rate**. This document is the normative spec: 
 
 ## Inputs
 
-All inputs are derived from a wallet's public Solana history (via Helius RPC + Enhanced Transactions + DAS):
+All inputs are derived from a wallet's public mainnet history via Helius's
+`getTransactionsForAddress` (one call with `sortOrder: asc, limit: 1` for the
+oldest tx → age; bounded pages of full, token-account-aware transactions with
+`tokenAccounts: "balanceChanged"` for trades/volume/hold). Swaps are detected
+from real on-chain balance deltas, so every DEX is covered:
 
 | Input | Meaning |
 |---|---|

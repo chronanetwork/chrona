@@ -3,7 +3,6 @@ export interface ScorerConfig {
   cluster: "mainnet" | "devnet";
   attestationValiditySecs: number;
   port: number;
-  maxSigPages: number;
   maxTxPages: number;
   budgetMs: number;
 }
@@ -18,8 +17,7 @@ export function loadConfig(): ScorerConfig {
     cluster: (process.env.SCORER_CLUSTER as "mainnet" | "devnet") ?? "mainnet",
     attestationValiditySecs: Number(process.env.ATTESTATION_VALIDITY_SECS ?? 900),
     port: Number(process.env.PORT ?? 8787),
-    maxSigPages: Number(process.env.MAX_SIG_PAGES ?? 5),
-    maxTxPages: Number(process.env.MAX_TX_PAGES ?? 5),
+    maxTxPages: Number(process.env.MAX_TX_PAGES ?? 2),
     budgetMs: Number(process.env.MEASURE_BUDGET_MS ?? 20_000),
   };
 }

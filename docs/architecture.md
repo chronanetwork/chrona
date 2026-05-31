@@ -18,7 +18,7 @@ A Solana program cannot read arbitrary historical transactions — it only sees 
         │   DApp /     │ ───────────────────────────►  Scorer oracle
         │   wallet     │   POST /score → signed attestation
         └─────┬───────┘ ◄───────────────────────────  (Helius: signatures,
-              │                                          Enhanced Tx, DAS)
+              │                                          getTransactionsForAddress)
               │  tx = [ ed25519_verify_ix, initialize_miner_ix ]  (+ 0.1 SOL fee)
               ▼
         ┌──────────────────────────────────────────────┐

@@ -20,7 +20,6 @@ async function scoreWallet(address: string) {
   const measurement = await measureWallet(address, {
     apiKey: config.heliusApiKey,
     cluster: config.cluster,
-    maxSigPages: config.maxSigPages,
     maxTxPages: config.maxTxPages,
     budgetMs: config.budgetMs,
   });
