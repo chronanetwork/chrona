@@ -127,3 +127,87 @@ button.action:disabled {
   height: 100%;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
 }
+
+.field {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.input {
+  flex: 1;
+  background: #0e0e16;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 14px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.input.num {
+  width: 130px;
+  flex: none;
+  text-align: right;
+}
+
+.calc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.calc-row label {
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 10px 0 0;
+  accent-color: var(--accent);
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.stat {
+  background: #0e0e16;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-v {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.stat-l {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.navlink {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--accent-2);
+  font-size: 14px;
+}

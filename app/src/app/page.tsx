@@ -12,7 +12,12 @@ export default function Home() {
         mine $KAIRO just by having been active on Solana.
       </p>
       <Mining />
-      <p className="msg" style={{ textAlign: "center", marginTop: 24 }}>
+      <p style={{ textAlign: "center" }}>
+        <a className="navlink" href="/calculator">
+          Check any wallet&apos;s score &amp; earnings →
+        </a>
+      </p>
+      <p className="msg" style={{ textAlign: "center", marginTop: 12 }}>
         <a href="https://github.com/KairoMine/kairo" target="_blank" rel="noreferrer">
           open source on GitHub
         </a>

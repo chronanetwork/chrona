@@ -35,6 +35,19 @@ export function getProgram(connection: Connection, wallet: any): Program {
   return new Program(idl as Idl, provider);
 }
 
+/** A read-only Program for fetching accounts without a connected wallet. */
+export function getReadonlyProgram(connection: Connection): Program {
+  const noopWallet = {
+    publicKey: PublicKey.default,
+    signTransaction: async (t: any) => t,
+    signAllTransactions: async (t: any) => t,
+  };
+  const provider = new AnchorProvider(connection, noopWallet as any, {
+    commitment: "confirmed",
+  });
+  return new Program(idl as Idl, provider);
+}
+
 export interface SignedAttestation {
   wallet: string;
   score: number;
