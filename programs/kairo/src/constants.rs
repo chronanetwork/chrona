@@ -25,8 +25,12 @@ pub const H_SECONDS: u64 = 41_721_912;
 /// One-time mining initialization fee, in lamports (0.1 SOL).
 pub const INIT_FEE_LAMPORTS: u64 = 100_000_000;
 
+/// Default hash-rate (score) bounds, matching the scoring spec (`MIN_HR`/`MAX_HR`).
+/// A fresh wallet floors at `MIN_SCORE`; the best wallets cap at `MAX_SCORE`.
+pub const MIN_SCORE: u64 = 100;
+pub const MAX_SCORE: u64 = 10_000;
+
 // ---- PDA seeds ----
 pub const GLOBAL_SEED: &[u8] = b"global";
 pub const MINER_SEED: &[u8] = b"miner";
 pub const MINT_AUTH_SEED: &[u8] = b"mint_auth";
-pub const TREASURY_SEED: &[u8] = b"treasury";

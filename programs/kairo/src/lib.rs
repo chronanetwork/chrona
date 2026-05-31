@@ -1,7 +1,12 @@
 use anchor_lang::prelude::*;
 
 pub mod constants;
+pub mod errors;
+pub mod instructions;
 pub mod math;
+pub mod state;
+
+use instructions::*;
 
 declare_id!("6MS8n87aRsXE5RjyVXuf9wcfARn5ut4m2YhBFE3kairo");
 
@@ -15,11 +20,12 @@ declare_id!("6MS8n87aRsXE5RjyVXuf9wcfARn5ut4m2YhBFE3kairo");
 pub mod kairo {
     use super::*;
 
-    pub fn ping(_ctx: Context<Ping>) -> Result<()> {
-        msg!("kairo");
-        Ok(())
+    /// One-time program setup: record the mint, oracle key, treasury, and
+    /// parameters. Mining starts inactive until mint authority is handed over.
+    pub fn initialize_global(
+        ctx: Context<InitializeGlobal>,
+        params: InitializeGlobalParams,
+    ) -> Result<()> {
+        instructions::initialize_global::handler(ctx, params)
     }
 }
-
-#[derive(Accounts)]
-pub struct Ping {}
