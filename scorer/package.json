@@ -1,0 +1,24 @@
+{
+  "name": "@kairo/scorer",
+  "version": "0.1.0",
+  "description": "Kairo scorer oracle — deterministic wallet scoring + ed25519 attestations",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "score": "tsx src/cli.ts",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@kairo/sdk": "*",
+    "@solana/web3.js": "^1.95.0",
+    "bs58": "^5.0.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.7.3"
+  }
+}
