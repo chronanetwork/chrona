@@ -1,0 +1,1132 @@
+{
+  "address": "6MS8n87aRsXE5RjyVXuf9wcfARn5ut4m2YhBFE3kairo",
+  "metadata": {
+    "name": "kairo",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Kairo — Proof-of-Activity mined SPL token"
+  },
+  "docs": [
+    "Kairo — a Proof-of-Activity mined SPL token.",
+    "",
+    "Wallets are scored off-chain on their on-chain history (age, trades, volume,",
+    "hold time). That score is their \"hash rate\". Miners share each moment of",
+    "emission proportional to their hash rate via an O(1) accumulator, and mint",
+    "their accrued rewards on claim."
+  ],
+  "instructions": [
+    {
+      "name": "claim",
+      "docs": [
+        "Mint accrued rewards to the calling miner."
+      ],
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "miner"
+          ]
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "miner",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true,
+          "relations": [
+            "global"
+          ]
+        },
+        {
+          "name": "mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_global",
+      "docs": [
+        "One-time program setup: record the mint, oracle key, treasury, and",
+        "parameters. Mining starts inactive until mint authority is handed over."
+      ],
+      "discriminator": [
+        47,
+        225,
+        15,
+        112,
+        86,
+        51,
+        190,
+        231
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The $KAIRO mint (created externally — by the DBC on mainnet, or a setup",
+            "script on devnet). We only record its address here."
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "InitializeGlobalParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_miner",
+      "docs": [
+        "Register the caller as a miner: verify the oracle attestation, charge",
+        "the initialization fee, and join the pool at the attested hash rate."
+      ],
+      "discriminator": [
+        170,
+        106,
+        254,
+        94,
+        49,
+        203,
+        51,
+        79
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "miner",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "docs": [
+            "Receives the initialization fee. Validated against `global.treasury`."
+          ],
+          "writable": true,
+          "relations": [
+            "global"
+          ]
+        },
+        {
+          "name": "instructions_sysvar",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "score",
+          "type": "u64"
+        },
+        {
+          "name": "expiry",
+          "type": "i64"
+        },
+        {
+          "name": "nonce",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "re_attest",
+      "docs": [
+        "Refresh the caller's score with a new attestation."
+      ],
+      "discriminator": [
+        255,
+        186,
+        42,
+        238,
+        205,
+        136,
+        89,
+        47
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "miner"
+          ]
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "miner",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "instructions_sysvar",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "score",
+          "type": "u64"
+        },
+        {
+          "name": "expiry",
+          "type": "i64"
+        },
+        {
+          "name": "nonce",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_mint_authority",
+      "docs": [
+        "Hand $KAIRO mint authority to the program PDA and activate mining.",
+        "Signed by the current mint authority (the deployer)."
+      ],
+      "discriminator": [
+        67,
+        127,
+        155,
+        187,
+        100,
+        174,
+        103,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true,
+          "relations": [
+            "global"
+          ]
+        },
+        {
+          "name": "mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_oracle",
+      "discriminator": [
+        186,
+        128,
+        81,
+        104,
+        74,
+        79,
+        18,
+        224
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "global"
+          ]
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_oracle",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_params",
+      "discriminator": [
+        27,
+        234,
+        178,
+        52,
+        147,
+        2,
+        187,
+        141
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "global"
+          ]
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "init_fee_lamports",
+          "type": "u64"
+        },
+        {
+          "name": "min_score",
+          "type": "u64"
+        },
+        {
+          "name": "max_score",
+          "type": "u64"
+        },
+        {
+          "name": "attestation_validity_secs",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "set_paused",
+      "discriminator": [
+        91,
+        60,
+        125,
+        192,
+        176,
+        225,
+        166,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "global"
+          ]
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "set_treasury",
+      "discriminator": [
+        57,
+        97,
+        196,
+        95,
+        195,
+        206,
+        106,
+        136
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "global"
+          ]
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_treasury",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "transfer_authority",
+      "discriminator": [
+        48,
+        169,
+        76,
+        72,
+        229,
+        180,
+        55,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "global"
+          ]
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_authority",
+          "type": "pubkey"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "GlobalState",
+      "discriminator": [
+        163,
+        46,
+        74,
+        168,
+        216,
+        123,
+        133,
+        98
+      ]
+    },
+    {
+      "name": "Miner",
+      "discriminator": [
+        223,
+        113,
+        15,
+        54,
+        123,
+        122,
+        140,
+        100
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Paused",
+      "msg": "Program is paused"
+    },
+    {
+      "code": 6001,
+      "name": "NotActive",
+      "msg": "Mining is not active yet (mint authority not handed over)"
+    },
+    {
+      "code": 6002,
+      "name": "AlreadyActive",
+      "msg": "Mining is already active"
+    },
+    {
+      "code": 6003,
+      "name": "ScoreTooLow",
+      "msg": "Score is below the configured minimum"
+    },
+    {
+      "code": 6004,
+      "name": "ScoreTooHigh",
+      "msg": "Score is above the configured maximum"
+    },
+    {
+      "code": 6005,
+      "name": "AttestationExpired",
+      "msg": "Attestation has expired"
+    },
+    {
+      "code": 6006,
+      "name": "MissingEd25519Ix",
+      "msg": "Missing or misplaced ed25519 verification instruction"
+    },
+    {
+      "code": 6007,
+      "name": "AttestationMismatch",
+      "msg": "Attestation signature does not match the configured oracle or expected message"
+    },
+    {
+      "code": 6008,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6009,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidMint",
+      "msg": "Provided mint does not match the configured mint"
+    },
+    {
+      "code": 6011,
+      "name": "MintAuthorityNotProgram",
+      "msg": "Mint authority is not (yet) the program PDA"
+    },
+    {
+      "code": 6012,
+      "name": "CapReached",
+      "msg": "Mineable supply cap reached"
+    },
+    {
+      "code": 6013,
+      "name": "NothingToClaim",
+      "msg": "Nothing to claim"
+    }
+  ],
+  "types": [
+    {
+      "name": "GlobalState",
+      "docs": [
+        "Singleton program configuration and mining-pool state.",
+        "PDA: `[\"global\"]`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": [
+              "Admin: may rotate the oracle key, adjust params, pause, hand over mint authority."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle_pubkey",
+            "docs": [
+              "Ed25519 public key the scorer oracle signs attestations with."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "docs": [
+              "The $KAIRO mint this program controls."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "docs": [
+              "Wallet that receives initialization fees."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "genesis_ts",
+            "docs": [
+              "Unix timestamp at which mining became active (emission genesis). 0 until active."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "last_update_ts",
+            "docs": [
+              "Last timestamp the accumulator was settled to."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "acc_reward_per_hash",
+            "docs": [
+              "Accumulated reward per unit hash rate, Q64.64 fixed point (base units)."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_hash_rate",
+            "docs": [
+              "Sum of active miners' hash rates."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_minted_base",
+            "docs": [
+              "Total base units the program has injected into the pool (mined only)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "premine_observed",
+            "docs": [
+              "Mint supply observed at the moment authority was handed to the program",
+              "(the premine). Recorded for cap accounting / audit."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "init_fee_lamports",
+            "docs": [
+              "One-time initialization fee, lamports."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_score",
+            "docs": [
+              "Minimum acceptable score (hash rate)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_score",
+            "docs": [
+              "Maximum acceptable score (hash rate)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "attestation_validity_secs",
+            "docs": [
+              "How long an attestation is valid, seconds."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "active",
+            "docs": [
+              "Whether mining is active (mint authority held by program)."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "paused",
+            "docs": [
+              "Emergency pause for joins/claims."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint_auth_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeGlobalParams",
+      "docs": [
+        "Parameters for [`initialize_global`]. Defaults (see the SDK) use the",
+        "scoring-spec bounds and the 0.1 SOL fee; all are admin-adjustable later."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle_pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "init_fee_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "min_score",
+            "type": "u64"
+          },
+          {
+            "name": "max_score",
+            "type": "u64"
+          },
+          {
+            "name": "attestation_validity_secs",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Miner",
+      "docs": [
+        "Per-wallet mining account. PDA: `[\"miner\", owner]`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "hash_rate",
+            "docs": [
+              "This wallet's hash rate (= attested score snapshot)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "reward_debt",
+            "docs": [
+              "`acc_reward_per_hash` checkpoint at last settle, Q64.64."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "accrued_base",
+            "docs": [
+              "Settled-but-unclaimed rewards, base units."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "joined_ts",
+            "docs": [
+              "When this miner joined."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "attestation_expiry",
+            "docs": [
+              "Expiry of the attestation used at (re-)initialization."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "score_nonce",
+            "docs": [
+              "Nonce from the most recent attestation (audit/replay reference)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

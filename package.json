@@ -9,6 +9,12 @@
     "scorer",
     "app"
   ],
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1"
+  },
   "scripts": {
     "lint": "prettier \"{tests,packages,scorer}/**/*.ts\" --check",
     "lint:fix": "prettier \"{tests,packages,scorer}/**/*.ts\" -w",
