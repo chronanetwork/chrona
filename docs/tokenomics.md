@@ -1,6 +1,6 @@
 # Tokenomics
 
-Kairo's emission is a continuous halving curve — Bitcoin's shape, recalibrated so the first day is lively and the tail lasts effectively forever.
+Kairo's emission is a **front-loaded power-law curve**: it pays out fast on day one and tapers quickly, rewarding the earliest miners, then settles into a centuries-long tail that approaches — but never reaches — the cap.
 
 ## Parameters
 
@@ -8,55 +8,50 @@ Kairo's emission is a continuous halving curve — Bitcoin's shape, recalibrated
 |---|---|
 | Decimals | 6 |
 | Genesis / launch supply (premine) | 100,000 KAIRO |
-| Hard cap (asymptote) | 21,000,000 KAIRO |
-| Mineable total | 20,900,000 KAIRO |
-| Initial emission rate `r0` | 30,000 KAIRO / day |
-| Halving interval `H` | ≈ 482.8925 days (~15.9 months) |
+| Hard cap | 21,000,000 KAIRO |
+| Mineable total (asymptote) | 20,900,000 KAIRO |
+| Day-1 emission | 30,000 KAIRO |
+| Exponent `p` | 0.55 (so `1 − p = 0.45`) |
+| Scale `K` | ≈ 81,958.2 KAIRO |
 
 ## The curve
 
-Emission rate at time `t` (seconds since genesis):
+With `t_days = elapsed_secs / 86400 + 1`, the emission rate decays as a power law and the cumulative emission is:
 
 ```
-r(t) = r0 · 2^(−t/H)
+r(t) ∝ t_days^(−p)
+E(t) = K · (t_days^(1−p) − 1),   clamped at 20,900,000
 ```
 
-Cumulative emission to the whole network by time `t`:
+`K` is pinned so that **day 1 emits exactly 30,000 KAIRO**. Because `1 − p > 0`, `E(t)` keeps growing, reaching the **20,900,000 mineable cap at ≈ 616 years** — at which point all that exists is the 100k premine plus 20.9M mined: the **21,000,000 hard cap**, enforced on-chain.
 
-```
-E(t) = (r0 · H / ln 2) · (1 − 2^(−t/H))
-```
-
-As `t → ∞`, `E(t) → r0·H/ln2`. We choose `H` so that this asymptote equals the mineable total:
-
-```
-r0 · H / ln 2 = 20,900,000
-H = 20,900,000 · ln 2 / 30,000  (per day)  ≈ 482.8925 days
-```
-
-So the curve is pinned by two facts the project wanted: **30,000 KAIRO on day one**, and a **21,000,000 hard cap** (100k premine + 20.9M mined) that is approached but never reached.
+Unlike a halving curve (whose day-over-day drop is gentle), a power law falls steeply at the start — so the earliest miners genuinely earn the most.
 
 ## Sanity checks
 
-| Horizon | Cumulative mined | Still mineable |
+| Horizon | Emitted that day | Cumulative mined |
 |---|---|---|
-| Day 1 | ≈ 29,978 KAIRO | yes |
-| Year 1 | ≈ 8.52M | yes |
-| Year 2 | ≈ 13.57M | yes |
-| Year 5 | ≈ 19.38M | yes |
-| Year 10 | ≈ 20.79M | yes (≈110k left and counting) |
+| Day 1 | 30,000 | 30,000 |
+| Day 2 | ≈ 22,410 | ≈ 52,410 |
+| Day 3 | ≈ 18,571 | ≈ 70,981 |
+| Day 5 | ≈ 14,458 | ≈ 101,594 |
+| Year 1 | — | ≈ 1.085M |
+| Year 10 | — | ≈ 3.20M |
+| Year 100 | — | ≈ 9.18M |
+| Year ~616 | — | 20,900,000 (cap) |
 
 ## On-chain representation
 
 All amounts are in base units (1 KAIRO = 1e6 base units). Time is `Clock.unix_timestamp` (seconds).
 
 ```
-ASYMPTOTE_BASE = 20_900_000 * 1e6   // mineable cap, program-minted
-H_SECONDS      = 41_721_912         // 482.8925 days
-PREMINE_BASE   = 100_000   * 1e6    // minted outside the program (DBC / devnet)
+ASYMPTOTE_BASE  = 20_900_000 * 1e6   // mineable cap, program-minted
+EMISSION_K_BASE = 81_958_198_440     // K in base units
+ONE_MINUS_P_Q64 = 0.45 in Q64.64     // exponent (1 − p)
+PREMINE_BASE    = 100_000   * 1e6    // minted outside the program (DBC / devnet)
 ```
 
-The program never loops over blocks. The reward injected into the mining pool between two timestamps is the **closed-form difference** `ΔE = E(t_now) − E(t_last)`, which is exact across any number of halvings. `ΔE` is always floored to base units and clamped so cumulative program-minted supply can never exceed `ASYMPTOTE_BASE`. See [scoring-spec.md](scoring-spec.md) for hash rate and [architecture.md](architecture.md) for the accumulator.
+The program never loops over blocks. The reward injected into the pool between two timestamps is the **closed-form difference** `ΔE = E(t_now) − E(t_last)`, floored to base units and clamped so program-minted supply can never exceed `ASYMPTOTE_BASE`. The fractional power `t_days^(1−p)` is computed as `2^((1−p)·log2(t_days))` with exact fixed-point `log2` and `2^x`, validated to **0 base-unit error** against a 90-digit reference. See [scoring-spec.md](scoring-spec.md) for hash rate and [architecture.md](architecture.md) for the accumulator.
 
 ## Launch & supply
 

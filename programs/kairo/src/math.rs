@@ -1,23 +1,24 @@
 //! Fixed-point emission and reward-accumulator math.
 //!
-//! Emission follows a continuous halving curve `r(t) = r0 · 2^(−t/H)`, whose
-//! cumulative form
+//! Emission follows a front-loaded **power-law** curve `r(t) = C · t^(−p)`
+//! (p = 0.55), whose cumulative form is
 //!
 //! ```text
-//! E(t) = ASYMPTOTE · (1 − 2^(−t/H))
+//! E(t) = K · (t_days^(1−p) − 1),   t_days = elapsed_secs / 86400 + 1
 //! ```
 //!
-//! is evaluated in closed form — there is no per-block loop, and the result is
-//! exact across any number of halving boundaries. The only nontrivial
-//! primitive is `2^(−x)` in fixed point, which we compute exactly from a
-//! precomputed binary-digit table (see [`exp2_neg_frac`]).
+//! evaluated in closed form — no per-block loop. The fractional power
+//! `t^(1−p)` is computed as `2^((1−p) · log2(t))` using exact fixed-point
+//! `log2` (binary-digit extraction) and `2^x` (reciprocal of the
+//! [`exp2_neg_frac`] binary-digit table). Validated to 0 base-unit error
+//! against a 90-digit reference at day/year/century scales.
 //!
 //! Reward distribution uses the MasterChef / Synthetix "reward per share"
 //! accumulator. `acc_reward_per_hash` is a Q64.64 fixed-point value (64
 //! fractional bits): the cumulative reward, in base units, owed per single
 //! unit of hash rate since genesis.
 
-use crate::constants::{ASYMPTOTE_BASE, H_SECONDS};
+use crate::constants::{ASYMPTOTE_BASE, EMISSION_K_BASE, ONE_MINUS_P_Q64, SECONDS_PER_DAY};
 
 /// 1.0 in Q64.64 fixed point.
 pub const Q64: u128 = 1u128 << 64;
@@ -66,28 +67,80 @@ pub fn exp2_neg_frac(frac_q64: u64) -> u128 {
     result
 }
 
-/// `2^(−elapsed/H)` in Q64.64, where `elapsed` is seconds since genesis.
-///
-/// Splits `elapsed/H` into an integer number of halvings `i` (a right shift)
-/// and a fractional part handled by [`exp2_neg_frac`].
-pub fn emission_factor(elapsed_secs: u64) -> u128 {
-    let i = elapsed_secs / H_SECONDS;
-    let r = elapsed_secs % H_SECONDS;
-    let frac_q64 = (((r as u128) << 64) / (H_SECONDS as u128)) as u64;
-    let base = exp2_neg_frac(frac_q64); // (0.5, 1] in Q64.64
-    if i >= 128 {
-        0
+/// `2^(f)` for `f = frac_q64 / 2^64 ∈ [0, 1)`, returned in Q64.64 (∈ [1, 2)).
+/// Equals `floor(2^128 / 2^(−f))`, computed without forming 2^128.
+pub fn exp2_pos_frac(frac_q64: u64) -> u128 {
+    let neg = exp2_neg_frac(frac_q64); // (2^63, 2^64], Q64.64
+    // floor(2^128 / neg) = floor((u128::MAX + 1) / neg)
+    let q = u128::MAX / neg;
+    let r = u128::MAX % neg;
+    if r + 1 == neg {
+        q + 1
     } else {
-        base >> i
+        q
+    }
+}
+
+/// Fractional part of `log2(m)` for a mantissa `m ∈ [1, 2)` given as Q64.64
+/// (value in `[Q64, 2·Q64)`); returns the fraction in `[0, 1)` as a Q64 value.
+/// Standard square-and-test bit extraction, done in Q63 so the squaring stays
+/// within u128.
+pub fn log2_frac(mantissa_q64: u128) -> u64 {
+    let mut m = mantissa_q64 >> 1; // Q63, in [2^63, 2^64)
+    let two = 1u128 << 64; // 2.0 in Q63
+    let mut result: u64 = 0;
+    for i in 1..=64u32 {
+        m = (m * m) >> 63; // square in Q63; m ∈ [2^63, 2^65)
+        if m >= two {
+            result |= 1u64 << (64 - i);
+            m >>= 1; // back into [2^63, 2^64)
+        }
+    }
+    result
+}
+
+/// `t_days^(1−p)` in Q64.64, where `t_days = elapsed_secs / 86400 + 1`.
+/// Computes `2^((1−p) · log2(t_days))`.
+pub fn t_pow_one_minus_p(elapsed_secs: u64) -> u128 {
+    // Clamp to 1000 years: emission is fully capped long before then, and this
+    // keeps the intermediate shifts within u128.
+    const MAX_ELAPSED_SECS: u64 = 1000 * 365 * SECONDS_PER_DAY;
+    let elapsed_secs = elapsed_secs.min(MAX_ELAPSED_SECS);
+
+    // t_days in Q64.64 (≥ 1.0).
+    let t_q64 = (((elapsed_secs as u128) << 64) / (SECONDS_PER_DAY as u128)) + Q64;
+
+    // log2(t_days) ≥ 0: integer part `li` from the MSB, fraction from mantissa.
+    let e = 127 - t_q64.leading_zeros();
+    let mantissa = t_q64 >> (e - 64); // normalize to [Q64, 2·Q64)
+    let li = (e - 64) as u128;
+    let lf = log2_frac(mantissa) as u128; // Q64 fractional bits
+
+    // y = (1−p) · log2(t_days), Q64.64 — split to avoid overflow.
+    let y = li * ONE_MINUS_P_Q64 + ((lf * ONE_MINUS_P_Q64) >> 64);
+    let i = (y >> 64) as u32;
+    let f = (y & (Q64 - 1)) as u64;
+
+    // 2^y = 2^i · 2^f
+    let pf = exp2_pos_frac(f); // [Q64, 2·Q64)
+    if i >= 64 {
+        u128::MAX // astronomically past the cap; caller clamps
+    } else {
+        pf << i
     }
 }
 
 /// Cumulative emission `E(elapsed)` to the whole network, in base units
 /// (floored). Always `≤ ASYMPTOTE_BASE`.
 pub fn cumulative_emission(elapsed_secs: u64) -> u64 {
-    let f = emission_factor(elapsed_secs); // ≤ Q64
-    let one_minus = Q64 - f; // ∈ [0, Q64]
-    ((ASYMPTOTE_BASE as u128 * one_minus) >> 64) as u64
+    if elapsed_secs == 0 {
+        return 0;
+    }
+    let tp = t_pow_one_minus_p(elapsed_secs); // ≥ Q64
+    let e = EMISSION_K_BASE
+        .saturating_mul(tp.saturating_sub(Q64))
+        >> 64;
+    e.min(ASYMPTOTE_BASE as u128) as u64
 }
 
 /// Emission released to the whole pool between two elapsed timestamps
@@ -122,14 +175,15 @@ mod tests {
     const DAY: u64 = 86_400;
     const YEAR: u64 = 365 * DAY;
 
-    /// Reference cumulative emission (base units, floored), computed
-    /// independently at 90-digit precision from `E(t) = ASYMPTOTE·(1−2^(−t/H))`.
+    /// Reference cumulative emission (base units), computed independently at
+    /// 90-digit precision from `E(t) = K·(t_days^0.45 − 1)`. The fixed-point
+    /// implementation matches these to 0 base units.
     const REF: &[(u64, u64)] = &[
-        (DAY, 29_978_481_418),
-        (YEAR, 8_523_176_202_598),
-        (2 * YEAR, 13_570_537_449_190),
-        (5 * YEAR, 19_377_837_928_057),
-        (10 * YEAR, 20_789_139_838_600),
+        (DAY, 30_000_000_000),
+        (30 * DAY, 302_372_580_076),
+        (YEAR, 1_085_278_387_999),
+        (10 * YEAR, 3_204_118_745_171),
+        (100 * YEAR, 9_178_437_544_705),
     ];
 
     #[test]
@@ -159,9 +213,22 @@ mod tests {
     }
 
     #[test]
-    fn day_one_emission_is_about_30k() {
+    fn day_one_emission_is_exactly_30k() {
         let kairo = cumulative_emission(DAY) as f64 / 1e6;
-        assert!((kairo - 29_978.48).abs() < 0.1, "day-1 = {kairo} KAIRO");
+        assert!((kairo - 30_000.0).abs() < 0.001, "day-1 = {kairo} KAIRO");
+    }
+
+    #[test]
+    fn front_loaded_daily_decline() {
+        // 30k, ~22.4k, ~18.6k, ~16.2k per day — fast early taper.
+        let d = |n: u64| {
+            (cumulative_emission(n * DAY) - cumulative_emission((n - 1) * DAY)) as f64 / 1e6
+        };
+        assert!((d(1) - 30_000.0).abs() < 1.0);
+        assert!((d(2) - 22_410.0).abs() < 1.0);
+        assert!((d(3) - 18_571.0).abs() < 1.0);
+        // strictly decreasing
+        assert!(d(1) > d(2) && d(2) > d(3) && d(3) > d(4));
     }
 
     #[test]
@@ -177,13 +244,14 @@ mod tests {
 
     #[test]
     fn never_exceeds_cap() {
-        // far future: ~200 years and an absurd timestamp
-        assert!(cumulative_emission(200 * YEAR) <= ASYMPTOTE_BASE);
+        // The curve reaches the mineable cap at ≈ 616 years.
+        assert!(cumulative_emission(600 * YEAR) <= ASYMPTOTE_BASE);
         assert!(cumulative_emission(u64::MAX) <= ASYMPTOTE_BASE);
-        // and it should be essentially at the cap by then
-        assert!(cumulative_emission(200 * YEAR) > ASYMPTOTE_BASE - ONE_KAIRO_TEST);
+        // By 700 years it is pinned at the cap.
+        assert_eq!(cumulative_emission(700 * YEAR), ASYMPTOTE_BASE);
+        // ...and 200 years in, still well below it (long tail remaining).
+        assert!(cumulative_emission(200 * YEAR) < ASYMPTOTE_BASE);
     }
-    const ONE_KAIRO_TEST: u64 = 1_000_000;
 
     #[test]
     fn emission_between_is_difference() {
