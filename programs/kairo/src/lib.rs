@@ -28,4 +28,15 @@ pub mod kairo {
     ) -> Result<()> {
         instructions::initialize_global::handler(ctx, params)
     }
+
+    /// Hand $KAIRO mint authority to the program PDA and activate mining.
+    /// Signed by the current mint authority (the deployer).
+    pub fn set_mint_authority(ctx: Context<SetMintAuthority>) -> Result<()> {
+        instructions::set_mint_authority::handler(ctx)
+    }
+
+    /// Mint accrued rewards to the calling miner.
+    pub fn claim(ctx: Context<Claim>) -> Result<()> {
+        instructions::claim::handler(ctx)
+    }
 }

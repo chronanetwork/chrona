@@ -1,5 +1,9 @@
 use anchor_lang::prelude::*;
 
+use crate::constants::ASYMPTOTE_BASE;
+use crate::errors::KairoError;
+use crate::math;
+
 /// Singleton program configuration and mining-pool state.
 /// PDA: `["global"]`.
 #[account]
@@ -46,6 +50,42 @@ pub struct GlobalState {
     pub mint_auth_bump: u8,
 }
 
+impl GlobalState {
+    /// Lazily advance the reward accumulator to `now_ts`, injecting the
+    /// emission released since the last update and distributing it across the
+    /// current total hash rate. Floors to base units and clamps at the mineable
+    /// cap. Must be called at the start of every state-changing instruction,
+    /// and always *before* `total_hash_rate` changes.
+    pub fn update_pool(&mut self, now_ts: i64) -> Result<()> {
+        if !self.active || now_ts <= self.last_update_ts {
+            return Ok(());
+        }
+        if self.total_hash_rate > 0 {
+            let last_elapsed = self.last_update_ts.saturating_sub(self.genesis_ts).max(0) as u64;
+            let now_elapsed = now_ts.saturating_sub(self.genesis_ts).max(0) as u64;
+
+            let mut d_e = math::emission_between(last_elapsed, now_elapsed);
+            let remaining = ASYMPTOTE_BASE.saturating_sub(self.total_minted_base);
+            if d_e > remaining {
+                d_e = remaining;
+            }
+            if d_e > 0 {
+                let inc = math::acc_increment(d_e, self.total_hash_rate);
+                self.acc_reward_per_hash = self
+                    .acc_reward_per_hash
+                    .checked_add(inc)
+                    .ok_or(KairoError::MathOverflow)?;
+                self.total_minted_base = self
+                    .total_minted_base
+                    .checked_add(d_e)
+                    .ok_or(KairoError::MathOverflow)?;
+            }
+        }
+        self.last_update_ts = now_ts;
+        Ok(())
+    }
+}
+
 /// Per-wallet mining account. PDA: `["miner", owner]`.
 #[account]
 #[derive(InitSpace)]
@@ -64,4 +104,15 @@ pub struct Miner {
     /// Nonce from the most recent attestation (audit/replay reference).
     pub score_nonce: [u8; 32],
     pub bump: u8,
+}
+
+impl Miner {
+    /// Credit rewards accrued since the last settle into `accrued_base`, and
+    /// advance the miner's `reward_debt` checkpoint to the current accumulator.
+    /// Call before any change to `hash_rate` and before paying out a claim.
+    pub fn settle(&mut self, acc_reward_per_hash: u128) {
+        let pending = math::pending_reward(acc_reward_per_hash, self.reward_debt, self.hash_rate);
+        self.accrued_base = self.accrued_base.saturating_add(pending);
+        self.reward_debt = acc_reward_per_hash;
+    }
 }
