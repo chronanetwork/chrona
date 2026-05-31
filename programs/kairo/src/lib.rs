@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
 pub mod constants;
+pub mod ed25519;
 pub mod errors;
 pub mod instructions;
 pub mod math;
@@ -35,8 +36,63 @@ pub mod kairo {
         instructions::set_mint_authority::handler(ctx)
     }
 
+    /// Register the caller as a miner: verify the oracle attestation, charge
+    /// the initialization fee, and join the pool at the attested hash rate.
+    pub fn initialize_miner(
+        ctx: Context<InitializeMiner>,
+        score: u64,
+        expiry: i64,
+        nonce: [u8; 32],
+    ) -> Result<()> {
+        instructions::initialize_miner::handler(ctx, score, expiry, nonce)
+    }
+
+    /// Refresh the caller's score with a new attestation.
+    pub fn re_attest(
+        ctx: Context<ReAttest>,
+        score: u64,
+        expiry: i64,
+        nonce: [u8; 32],
+    ) -> Result<()> {
+        instructions::re_attest::handler(ctx, score, expiry, nonce)
+    }
+
     /// Mint accrued rewards to the calling miner.
     pub fn claim(ctx: Context<Claim>) -> Result<()> {
         instructions::claim::handler(ctx)
+    }
+
+    // ---- admin ----
+
+    pub fn set_oracle(ctx: Context<AdminOnly>, new_oracle: Pubkey) -> Result<()> {
+        instructions::admin::set_oracle(ctx, new_oracle)
+    }
+
+    pub fn set_treasury(ctx: Context<AdminOnly>, new_treasury: Pubkey) -> Result<()> {
+        instructions::admin::set_treasury(ctx, new_treasury)
+    }
+
+    pub fn set_params(
+        ctx: Context<AdminOnly>,
+        init_fee_lamports: u64,
+        min_score: u64,
+        max_score: u64,
+        attestation_validity_secs: i64,
+    ) -> Result<()> {
+        instructions::admin::set_params(
+            ctx,
+            init_fee_lamports,
+            min_score,
+            max_score,
+            attestation_validity_secs,
+        )
+    }
+
+    pub fn set_paused(ctx: Context<AdminOnly>, paused: bool) -> Result<()> {
+        instructions::admin::set_paused(ctx, paused)
+    }
+
+    pub fn transfer_authority(ctx: Context<AdminOnly>, new_authority: Pubkey) -> Result<()> {
+        instructions::admin::transfer_authority(ctx, new_authority)
     }
 }
