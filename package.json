@@ -1,0 +1,29 @@
+{
+  "name": "kairo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kairo — Proof-of-Activity mined SPL token on Solana",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "scorer",
+    "app"
+  ],
+  "scripts": {
+    "lint": "prettier \"{tests,packages,scorer}/**/*.ts\" --check",
+    "lint:fix": "prettier \"{tests,packages,scorer}/**/*.ts\" -w",
+    "test": "anchor test"
+  },
+  "devDependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@types/bn.js": "^5.1.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.0.0",
+    "chai": "^4.3.4",
+    "mocha": "^10.2.0",
+    "prettier": "^3.2.0",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,61 @@
+<div align="center">
+
+# Kairo
+
+**Proof of Activity. Mined by the wallets that actually use Solana.**
+
+`$KAIRO` is an SPL token you don't buy your way into — you earn it by having been *active* on Solana. Your wallet's real history is its mining rig.
+
+</div>
+
+---
+
+## The idea
+
+Every other token rewards capital. Kairo rewards *activity*.
+
+When you join, Kairo reads your wallet's on-chain life — how long you've been here, how much you've actually traded, the size of your flow, how long you hold what you buy — and distills it into a single number: your **score**. That score is your **hash rate**.
+
+There's no GPU, no winner-take-all lottery. Every active wallet mines *simultaneously*, sharing each instant of emission in proportion to its share of the total network hash rate. A long-lived, high-conviction trader mines faster than a fresh wallet — but the fresh wallet still mines. Everyone who shows up gets a seat at the table; the table just isn't flat.
+
+```
+your share of this moment's emission  =  your hash rate / total network hash rate
+```
+
+## How it works
+
+1. **Get scored.** Connect a wallet and Kairo previews your score for free — a transparent breakdown of age, trades, volume, and hold time. The scoring is open-source and deterministic: anyone can recompute your number from public data.
+2. **Start mining.** Pay a one-time **0.1 SOL** initialization fee and register on-chain. From that moment your wallet is mining $KAIRO, 24/7, no hardware required.
+3. **Claim.** Rewards accrue continuously. Claim whenever you like — the program mints fresh $KAIRO straight to your wallet.
+
+## The emission curve
+
+A Bitcoin-shaped curve, tuned for Solana's pace.
+
+- **100,000** $KAIRO at genesis (the launch supply).
+- **~30,000** $KAIRO mined across the first 24 hours — Kairo scales fast out of the gate.
+- Emission **halves roughly every ~16 months**, decaying toward a hard ceiling of **21,000,000** $KAIRO that is mathematically never reached.
+
+Years from now, there will still be $KAIRO left to mine. The curve just gets quieter. → [docs/tokenomics.md](docs/tokenomics.md)
+
+## Built to be verified
+
+Kairo is open-source end to end. The scoring algorithm is public and reproducible, every score is a signed, auditable attestation, and the on-chain program enforces the supply cap and reward math with no privileged minting. → [docs/oracle-trust.md](docs/oracle-trust.md)
+
+## Dig deeper
+
+| | |
+|---|---|
+| **Architecture** — how the program, the scorer, and the dapp fit together | [docs/architecture.md](docs/architecture.md) |
+| **Tokenomics** — the emission math, derived and validated | [docs/tokenomics.md](docs/tokenomics.md) |
+| **Scoring spec** — exactly how a wallet becomes a hash rate | [docs/scoring-spec.md](docs/scoring-spec.md) |
+| **Oracle & trust model** — what's trustless, what's trusted, and why | [docs/oracle-trust.md](docs/oracle-trust.md) |
+| **On-chain program** | [programs/kairo](programs/kairo) |
+| **Scorer oracle** | [scorer](scorer) |
+| **Web app** | [app](app) |
+
+---
+
+<div align="center">
+<sub>Kairo (καιρός) — the opportune moment. Mine it.</sub>
+</div>

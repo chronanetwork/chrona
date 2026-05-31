@@ -1,0 +1,24 @@
+# Secrets / keypairs — NEVER commit
+keys/
+*-keypair.json
+.env
+.env.*
+!.env.example
+
+# Rust / Anchor
+target/
+.anchor/
+test-ledger/
+**/*.rs.bk
+
+# Node
+node_modules/
+.pnp.*
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# Misc
+.DS_Store
+*.log
