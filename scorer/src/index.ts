@@ -35,6 +35,18 @@ const json = (res: any, code: number, body: unknown) => {
 
 const server = createServer(async (req, res) => {
   try {
+    // CORS preflight (the dapp POSTs application/json from a different origin).
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "86400",
+      });
+      res.end();
+      return;
+    }
+
     const url = new URL(req.url ?? "/", "http://localhost");
 
     if (url.pathname === "/health") {

@@ -28,7 +28,7 @@ export const RPC_URL =
   process.env.NEXT_PUBLIC_RPC_URL ??
   "https://devnet.helius-rpc.com/?api-key=eea40423-0fd8-4254-aada-f627b5ff6a66";
 
-export const SCORER_URL = process.env.NEXT_PUBLIC_SCORER_URL ?? "http://localhost:8787";
+export const SCORER_URL = process.env.NEXT_PUBLIC_SCORER_URL ?? "https://score.kairo.win";
 
 export function getProgram(connection: Connection, wallet: any): Program {
   const provider = new AnchorProvider(connection, wallet, { commitment: "confirmed" });
