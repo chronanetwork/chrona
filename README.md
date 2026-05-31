@@ -30,13 +30,13 @@ your share of this moment's emission  =  your hash rate / total network hash rat
 
 ## The emission curve
 
-A front-loaded power-law curve — steep at the start, with a tail that lasts centuries.
+A sharp early burst that settles onto a long, steady plateau.
 
 - **100,000** $KAIRO at genesis (the launch supply).
-- **30,000** $KAIRO on day one, then a fast early taper — ~22,400 day two, ~18,600 day three — so the **earliest miners earn the most**.
-- Emission decays as `t^(−0.55)`, approaching a hard ceiling of **21,000,000** $KAIRO that it reaches only at **~616 years** — effectively never.
+- **30,000** $KAIRO on day one, dropping fast — ~16,700 day two, ~10,500 day three — down to a **steady ~5,000 $KAIRO/day by day 10**, so the **earliest miners earn the most**.
+- From there it holds near ~5,000/day for years (gently halving every ~8 years), approaching a hard ceiling of **21,000,000** $KAIRO it never quite reaches.
 
-The drop is sharp where it matters and gentle forever after: years from now there's still $KAIRO to mine. → [docs/tokenomics.md](docs/tokenomics.md)
+Mathematically it's the sum of two curves: a fast front-load spike plus a slow ~5k/day base. → [docs/tokenomics.md](docs/tokenomics.md)
 
 ## Built to be verified
 

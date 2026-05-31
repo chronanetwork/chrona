@@ -1,20 +1,22 @@
 import {
   ASYMPTOTE_KAIRO,
-  EMISSION_K_KAIRO,
-  EMISSION_P,
-  SECONDS_PER_DAY,
+  EMISSION_BASE_H_SECONDS,
+  EMISSION_BASE_KAIRO,
+  EMISSION_SPIKE_H_SECONDS,
+  EMISSION_SPIKE_KAIRO,
 } from "./constants";
 
 /**
  * Cumulative emission to the whole network, in whole KAIRO, `elapsed` seconds
- * after genesis. Power-law curve `E(t) = K·(t_days^(1−p) − 1)`, capped at the
- * mineable asymptote. Floating-point — for UI projections only; the on-chain
- * fixed-point math in `programs/kairo/src/math.rs` is authoritative.
+ * after genesis. Sum of two halving curves (front-load spike + ~5k/day base),
+ * capped at the mineable asymptote. Floating-point — for UI projections only;
+ * the on-chain fixed-point math in `programs/kairo/src/math.rs` is authoritative.
  */
 export function cumulativeEmissionKairo(elapsedSecs: number): number {
   if (elapsedSecs <= 0) return 0;
-  const tDays = elapsedSecs / SECONDS_PER_DAY + 1;
-  const e = EMISSION_K_KAIRO * (Math.pow(tDays, 1 - EMISSION_P) - 1);
+  const e =
+    EMISSION_SPIKE_KAIRO * (1 - Math.pow(2, -elapsedSecs / EMISSION_SPIKE_H_SECONDS)) +
+    EMISSION_BASE_KAIRO * (1 - Math.pow(2, -elapsedSecs / EMISSION_BASE_H_SECONDS));
   return Math.min(e, ASYMPTOTE_KAIRO);
 }
 

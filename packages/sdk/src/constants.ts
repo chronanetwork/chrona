@@ -19,12 +19,12 @@ export const ASYMPTOTE_KAIRO = 20_900_000;
 export const MAX_SUPPLY_KAIRO = 21_000_000;
 /** Launch supply, whole KAIRO. */
 export const PREMINE_KAIRO = 100_000;
-/** Seconds per day. */
-export const SECONDS_PER_DAY = 86_400;
-/** Power-law emission exponent p (rate ∝ t^(−p)); 1−p = 0.45. */
-export const EMISSION_P = 0.55;
-/** Emission scale K (whole KAIRO): E(t) = K·(t_days^(1−p) − 1). */
-export const EMISSION_K_KAIRO = 81_958.19844;
+// Emission = sum of two halving curves (front-load spike + ~5k/day base plateau).
+// E(t) = SPIKE·(1−2^(−t/H_spike)) + BASE·(1−2^(−t/H_base)), whole KAIRO.
+export const EMISSION_SPIKE_KAIRO = 47_051.945457;
+export const EMISSION_SPIKE_H_SECONDS = 78_946;
+export const EMISSION_BASE_KAIRO = 20_852_948.054543;
+export const EMISSION_BASE_H_SECONDS = 250_560_000;
 /** Initialization fee, lamports (0.1 SOL). */
 export const INIT_FEE_LAMPORTS = 100_000_000n;
 
