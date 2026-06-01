@@ -42,51 +42,52 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How it works */}
+      {/* How it works + live rig, side by side */}
       <section className="container section" id="how">
-        <div className="section-head">
-          <h2>How it works</h2>
-          <p>Connect, let your on-chain history become a hashrate, and mine $KAIRO continuously.</p>
-        </div>
-        <div className="grid-3">
-          <Window tile title={<><span className="accent">01</span> / connect</>}>
-            <div className="step">
-              <h3>Connect wallet</h3>
-              <p>
-                Connect any Solana wallet. Kairo reads only your public address and computes your
-                score for free — no transaction, no risk.
-              </p>
+        <div className="split">
+          <div>
+            <div className="section-head left">
+              <h2>How it works</h2>
+              <p>Connect, let your on-chain history become a hashrate, and mine continuously.</p>
             </div>
-          </Window>
-          <Window tile title={<><span className="accent">02</span> / score</>}>
-            <div className="step">
-              <h3>Activity becomes hashrate</h3>
-              <p>
-                Your history — wallet age, real trades, USD volume, and how long you hold — is
-                distilled into a single hashrate. Open-source and deterministic.
-              </p>
+            <div style={{ display: "grid", gap: 12 }}>
+              <Window tile title={<><span className="accent">01</span> / connect</>}>
+                <div className="step">
+                  <h3>Connect wallet</h3>
+                  <p>
+                    Connect any Solana wallet. Kairo reads only your public address and scores you
+                    for free — no transaction, no risk.
+                  </p>
+                </div>
+              </Window>
+              <Window tile title={<><span className="accent">02</span> / score</>}>
+                <div className="step">
+                  <h3>Activity becomes hashrate</h3>
+                  <p>
+                    Your history — wallet age, real trades, volume, and how long you hold — becomes
+                    a single hashrate. Open-source and deterministic.
+                  </p>
+                </div>
+              </Window>
+              <Window tile title={<><span className="accent">03</span> / mine</>}>
+                <div className="step">
+                  <h3>Mine $KAIRO</h3>
+                  <p>
+                    Pay 0.1 SOL to start, then mine continuously by your share of hashrate. It
+                    halves every 36h — top off to stay at full. Claim anytime.
+                  </p>
+                </div>
+              </Window>
             </div>
-          </Window>
-          <Window tile title={<><span className="accent">03</span> / mine</>}>
-            <div className="step">
-              <h3>Mine $KAIRO</h3>
-              <p>
-                Pay 0.1 SOL to start, then mine continuously, sharing every block by your hashrate.
-                It halves every 36h — top off (0.02 SOL) to stay at full. Claim anytime.
-              </p>
-            </div>
-          </Window>
-        </div>
-      </section>
+          </div>
 
-      {/* Dashboard */}
-      <section className="container section" id="dashboard">
-        <div className="section-head">
-          <h2>Your terminal</h2>
-          <p>Connect to preview your hashrate, start mining, and claim your $KAIRO.</p>
-        </div>
-        <div className="narrow">
-          <Mining />
+          <div id="dashboard">
+            <div className="section-head left">
+              <h2>Your rig</h2>
+              <p>Connect to preview your hashrate, start mining, and claim your $KAIRO.</p>
+            </div>
+            <Mining />
+          </div>
         </div>
       </section>
 
