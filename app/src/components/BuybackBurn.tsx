@@ -18,6 +18,8 @@ const usd = (n: number | null) =>
 const day = (ts: number | null) =>
   ts ? new Date(ts * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
 
+const pct = (n: number) => `${n.toFixed(n > 0 && n < 0.01 ? 4 : 2)}%`;
+
 export function BuybackBurn() {
   const [b, setB] = useState<BuybackBurnStats | null>(null);
   const [p, setP] = useState<MarketPrices | null>(null);
@@ -38,7 +40,8 @@ export function BuybackBurn() {
 
   const solValue = b && p?.solUsd != null ? b.solBoughtBack * p.solUsd : null;
   const burnValue = b && p?.kairoUsd != null ? b.kairoBurned * p.kairoUsd : null;
-  const burnPct = b ? (b.kairoBurned / MAX_SUPPLY) * 100 : null;
+  const burnPctCap = b ? (b.kairoBurned / MAX_SUPPLY) * 100 : null;
+  const burnPctSupply = b && b.currentSupply > 0 ? (b.kairoBurned / b.currentSupply) * 100 : null;
 
   return (
     <div className="bb">
@@ -59,7 +62,12 @@ export function BuybackBurn() {
         </div>
         <div className="bb-l">burned</div>
         <div className="bb-sub">
-          {burnPct != null ? `${burnPct.toFixed(burnPct > 0 && burnPct < 0.01 ? 4 : 2)}% of max supply` : " "}
+          {burnPctSupply != null
+            ? `${pct(burnPctSupply)} of current supply`
+            : burnPctCap != null
+              ? `${pct(burnPctCap)} of max supply`
+              : " "}
+          {burnPctSupply != null && burnPctCap != null ? ` · ${pct(burnPctCap)} of 21M cap` : ""}
           {burnValue != null ? ` · ≈ ${usd(burnValue)}` : ""}
         </div>
       </div>
@@ -71,11 +79,7 @@ export function BuybackBurn() {
               {b.burnTxs} burn{b.burnTxs === 1 ? "" : "s"}
               {day(b.lastBurnTs) ? ` · last ${day(b.lastBurnTs)}` : ""}
             </span>
-            <a
-              href={`https://solscan.io/account/${b.devWallet}`}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={`https://solscan.io/account/${b.devWallet}`} target="_blank" rel="noreferrer">
               dev wallet ↗
             </a>
           </>

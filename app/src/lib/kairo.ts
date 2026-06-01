@@ -94,6 +94,7 @@ export interface BuybackBurnStats {
   solBoughtBack: number;
   kairoBoughtBack: number;
   kairoBurned: number;
+  currentSupply: number;
   buybackTxs: number;
   burnTxs: number;
   lastBuybackTs: number | null;

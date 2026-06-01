@@ -18,6 +18,7 @@ export interface BuybackBurnStats {
   solBoughtBack: number; // total SOL spent acquiring $KAIRO
   kairoBoughtBack: number; // total $KAIRO acquired via buybacks
   kairoBurned: number; // total $KAIRO destroyed via burn instructions
+  currentSupply: number; // live $KAIRO mint supply (burns already removed)
   buybackTxs: number;
   burnTxs: number;
   lastBuybackTs: number | null;
@@ -28,6 +29,25 @@ export interface BuybackBurnStats {
 }
 
 let cache: { ts: number; data: BuybackBurnStats } | null = null;
+
+/** Live $KAIRO mint supply (whole tokens). Burns are already reflected here. */
+async function getMintSupply(url: string): Promise<number> {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getTokenSupply", params: [KAIRO] }),
+      signal: AbortSignal.timeout(8_000),
+    });
+    const v: any = (await res.json())?.result?.value;
+    if (v?.uiAmount != null) return Number(v.uiAmount);
+    if (v?.uiAmountString != null) return Number(v.uiAmountString);
+    if (v?.amount != null) return Number(v.amount) / 10 ** (Number(v.decimals) || DECIMALS);
+  } catch {
+    /* fall through */
+  }
+  return 0;
+}
 
 /** Sum $KAIRO destroyed by spl-token burn / burnChecked instructions in one tx. */
 function burnedKairoRaw(tx: any): bigint {
@@ -142,6 +162,7 @@ export async function getBuybackBurnStats(
     solBoughtBack,
     kairoBoughtBack,
     kairoBurned: Number(burnedRaw) / 10 ** DECIMALS,
+    currentSupply: await getMintSupply(url),
     buybackTxs,
     burnTxs,
     lastBuybackTs,
