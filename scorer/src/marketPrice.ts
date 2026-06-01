@@ -81,3 +81,12 @@ export async function getMarketPrices(apiKey: string): Promise<MarketPrices> {
   if (cache.at === 0) return refreshPrices(apiKey);
   return cache;
 }
+
+/**
+ * Last-known SOL/USD from the background feed, or null if the cache is still
+ * empty. Lets the scoring path reuse the warm cache instead of making its own
+ * Jupiter call.
+ */
+export function getCachedSolUsd(): number | null {
+  return cache.solUsd;
+}

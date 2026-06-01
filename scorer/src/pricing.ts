@@ -3,11 +3,19 @@
  * should pin this (env `SOL_PRICE_USD` or the `solPriceUsd` option) and record
  * it alongside the score; the live fetch is a convenience fallback.
  */
+import { getCachedSolUsd } from "./marketPrice";
+
 const FALLBACK_SOL_USD = 150;
 
 export async function getSolPriceUsd(): Promise<number> {
   const env = process.env.SOL_PRICE_USD;
   if (env && Number.isFinite(Number(env))) return Number(env);
+
+  // Prefer the shared background price feed's cached SOL/USD, so scoring adds
+  // no extra Jupiter load. Only falls through to a direct fetch if the feed
+  // hasn't produced a value yet (e.g. before its first tick).
+  const cached = getCachedSolUsd();
+  if (cached != null && cached > 0) return cached;
 
   // Jupiter lite price API (no key). Falls back to a constant on failure.
   try {
