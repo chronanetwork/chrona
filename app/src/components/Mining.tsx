@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useConnection, useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { projectedDailyKairo } from "@kairo/sdk";
+import { Window } from "@/components/Window";
 import {
   buildClaimTx,
   buildInitializeMinerTx,
@@ -121,42 +122,42 @@ export function Mining() {
 
   if (!publicKey) {
     return (
-      <div className="card" style={{ textAlign: "center" }}>
+      <Window title="kairo://connect" bodyStyle={{ textAlign: "center", padding: 30 }}>
         <h3 style={{ fontSize: 22 }}>Connect your wallet</h3>
-        <p className="muted" style={{ margin: "8px auto 18px", maxWidth: "40ch", lineHeight: 1.55 }}>
+        <p className="muted" style={{ margin: "8px auto 18px", maxWidth: "42ch", lineHeight: 1.55 }}>
           See your hash rate for free — no transaction, no commitment. Connecting only reads your
           public address.
         </p>
         <div style={{ display: "inline-flex" }}>
           <WalletMultiButton />
         </div>
-      </div>
+      </Window>
     );
   }
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <div className="card">
+      <Window title={<>kairo://score{miner ? "" : " · preview"}</>}>
         <div className="stat-big">{previewing && !score ? "…" : fmt(score, 0)}</div>
         <div className="stat-sub">{miner ? "your hash rate" : "your hash rate · preview"}</div>
 
         {bd && !miner && (
           <div style={{ marginTop: 18 }}>
-            <Factor label="Wallet age" v={bd.ageScore} />
-            <Factor label="Trades" v={bd.tradeScore} />
-            <Factor label="Volume" v={bd.volScore} />
-            <Factor label="Hold time" v={bd.holdScore} />
+            <Factor label="age" v={bd.ageScore} />
+            <Factor label="trades" v={bd.tradeScore} />
+            <Factor label="volume" v={bd.volScore} />
+            <Factor label="hold" v={bd.holdScore} />
           </div>
         )}
 
         <div style={{ marginTop: 14 }}>
           <div className="kv">
-            <span className="k">Projected per day</span>
+            <span className="k">projected / day</span>
             <span className="v">{fmt(dailyProjection)} KAIRO</span>
           </div>
           {global && (
             <div className="kv">
-              <span className="k">Network hash rate</span>
+              <span className="k">network hash rate</span>
               <span className="v">{fmt(totalHr, 0)}</span>
             </div>
           )}
@@ -167,10 +168,10 @@ export function Mining() {
             {busy ? "Working…" : "Start mining · 0.1 SOL"}
           </button>
         )}
-      </div>
+      </Window>
 
       {miner && (
-        <div className="card" style={{ textAlign: "center" }}>
+        <Window title="kairo://claim" bodyStyle={{ textAlign: "center" }}>
           <div className="stat-sub" style={{ marginTop: 0 }}>claimable now</div>
           <div className="stat-big">{fmt(claimable)}</div>
           <div className="stat-sub">KAIRO</div>
@@ -182,7 +183,7 @@ export function Mining() {
           >
             {busy ? "Working…" : "Claim"}
           </button>
-        </div>
+        </Window>
       )}
 
       {msg && <p className="msg">{msg}</p>}

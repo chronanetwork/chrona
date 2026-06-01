@@ -24,15 +24,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Nav />
           {children}
           <footer className="footer">
-            <div className="container footer-inner">
-              <div className="brand">
-                <img src="/logo.png" alt="Kairo" />
-                <span>Kairo</span>
-              </div>
-              <small>Non-custodial · open source · your keys never leave your wallet</small>
-              <div className="footer-links">
-                <a className="link" href={GITHUB_URL} target="_blank" rel="noreferrer">GitHub</a>
-                <a className="link" href={X_URL} target="_blank" rel="noreferrer">X</a>
+            <div className="container">
+              <div className="footer-inner">
+                <div className="brand">
+                  <span className="tile"><img src="/logo.png" alt="" /></span>
+                  <b>Kairo</b>
+                </div>
+                <small>non-custodial · open source · your keys never leave your wallet</small>
+                <div className="footer-links">
+                  <a href={GITHUB_URL} target="_blank" rel="noreferrer">GitHub</a>
+                  <a href={X_URL} target="_blank" rel="noreferrer">X</a>
+                </div>
               </div>
             </div>
           </footer>

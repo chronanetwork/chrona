@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { dailyEmissionKairo, MAX_SCORE, MIN_SCORE } from "@kairo/sdk";
+import { Window } from "@/components/Window";
 import { fetchGlobal, getReadonlyProgram, previewScore } from "@/lib/kairo";
 
 const fmt = (n: number, d = 0) =>
@@ -82,7 +83,7 @@ export default function CalculatorPage() {
 
       <div className="narrow" style={{ display: "grid", gap: 16 }}>
         {/* Lookup */}
-        <div className="card">
+        <Window title="kairo://lookup">
           <div className="field">
             <input
               className="input"
@@ -110,10 +111,10 @@ export default function CalculatorPage() {
             </div>
           )}
           {note && <p className="msg">{note}</p>}
-        </div>
+        </Window>
 
         {/* Calculator */}
-        <div className="card">
+        <Window title="kairo://calculator">
           <div className="calc-row">
             <label>
               Your hash rate
@@ -172,10 +173,10 @@ export default function CalculatorPage() {
               </div>
             )}
           </div>
-        </div>
+        </Window>
 
         {/* Earnings */}
-        <div className="card" style={{ textAlign: "center" }}>
+        <Window title="kairo://earnings" bodyStyle={{ textAlign: "center" }}>
           <div className="stat-sub" style={{ marginTop: 0 }}>you would mine</div>
           <div className="stat-big">{fmt(perDay, perDay < 10 ? 2 : 0)}</div>
           <div className="stat-sub">KAIRO / day</div>
@@ -188,7 +189,7 @@ export default function CalculatorPage() {
             Projection at the current emission rate. Earnings fall as the network grows or emission
             tapers, and rise as miners leave.
           </p>
-        </div>
+        </Window>
       </div>
     </main>
   );
