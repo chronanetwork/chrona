@@ -222,8 +222,10 @@ export default function DocsPage() {
 
               <p className="lead-q">Is this live on mainnet?</p>
               <p>
-                It&apos;s running on devnet today while we finish testing. Scores are always computed
-                from real <strong>mainnet</strong> history, so the number you see is the real one.
+                The program is <strong>deployed and verified</strong> on mainnet — anyone can confirm
+                the on-chain bytecode matches this repo. Mining unlocks when the $KAIRO mint authority
+                is handed to the program at token launch; until then your hashrate preview is live and
+                scored from real mainnet history.
               </p>
             </div>
           </section>

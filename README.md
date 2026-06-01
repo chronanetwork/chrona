@@ -48,6 +48,13 @@ Mathematically it's the sum of two curves: a fast front-load spike plus a slow ~
 
 Kairo is open-source end to end. The scoring algorithm is public and reproducible, every score is a signed, auditable attestation, and the on-chain program enforces the supply cap and reward math with no privileged minting. → [docs/oracle-trust.md](docs/oracle-trust.md)
 
+The program is **deployed and formally verified on mainnet** — the on-chain bytecode provably matches this repo:
+
+- Program: [`6MS8n87aRsXE5RjyVXuf9wcfARn5ut4m2YhBFE3kairo`](https://explorer.solana.com/address/6MS8n87aRsXE5RjyVXuf9wcfARn5ut4m2YhBFE3kairo)
+- Verification: [verify.osec.io](https://verify.osec.io/status/6MS8n87aRsXE5RjyVXuf9wcfARn5ut4m2YhBFE3kairo)
+
+Mining opens once the $KAIRO mint authority is handed to the program at token launch.
+
 ## Dig deeper
 
 | | |

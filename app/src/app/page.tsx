@@ -10,7 +10,7 @@ export default function Home() {
         <div className="folio">
           <span className="side">Proof of Activity</span>
           <span className="mid">— Kairo —</span>
-          <span className="side">Solana · Devnet Live</span>
+          <span className="side">Mainnet · Verified</span>
         </div>
 
         <div className="hero-grid">
@@ -36,7 +36,8 @@ export default function Home() {
               <div className="kv"><span className="k">Emission</span><span className="v">power-law</span></div>
               <div className="kv"><span className="k">Custody</span><span className="v">non-custodial</span></div>
               <div className="kv"><span className="k">Hashrate</span><span className="v">your history</span></div>
-              <div className="kv"><span className="k">Network</span><span className="v">devnet · live</span></div>
+              <div className="kv"><span className="k">Program</span><span className="v">mainnet · verified</span></div>
+              <div className="kv"><span className="k">Mining</span><span className="v">opens at launch</span></div>
             </Window>
           </div>
         </div>

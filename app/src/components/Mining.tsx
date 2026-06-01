@@ -41,12 +41,13 @@ export function Mining() {
 
   const refresh = useCallback(async () => {
     if (!program || !publicKey) return;
+    // global may not exist yet (pre-launch on mainnet) — treat as not-live.
     try {
       setGlobal(await fetchGlobal(program));
-      setMiner(await fetchMiner(program, publicKey));
-    } catch (e: any) {
-      setMsg(String(e.message ?? e));
+    } catch {
+      setGlobal(null);
     }
+    setMiner(await fetchMiner(program, publicKey));
   }, [program, publicKey]);
 
   // Fetch on connect, then poll gently (every 30s) — not on every render.
@@ -123,6 +124,7 @@ export function Mining() {
   const displayScore = miner ? effHr : baseHr;
   const dailyProjection = projectedDailyKairo(effHr, totalHr || effHr || 1, elapsed);
   const bd = preview?.breakdown;
+  const launched = !!global?.active; // mining opens once mint authority is handed over
 
   const onTopOff = async () => {
     if (!program || !publicKey) return;
@@ -207,9 +209,22 @@ export function Mining() {
         </div>
 
         {!miner ? (
-          <button className="btn full" style={{ marginTop: 18 }} disabled={busy} onClick={onMine}>
-            {busy ? "Working…" : "Start mining · 0.1 SOL"}
-          </button>
+          launched ? (
+            <button className="btn full" style={{ marginTop: 18 }} disabled={busy} onClick={onMine}>
+              {busy ? "Working…" : "Start mining · 0.1 SOL"}
+            </button>
+          ) : (
+            <>
+              <button className="btn full" style={{ marginTop: 18 }} disabled>
+                Mining opens at launch
+              </button>
+              <p className="msg" style={{ marginBottom: 0 }}>
+                Program is live &amp; verified on mainnet. Mining unlocks when the $KAIRO mint
+                authority is handed to the program at token launch — your hashrate preview above is
+                live right now.
+              </p>
+            </>
+          )
         ) : effHr < baseHr ? (
           <>
             <p className="msg" style={{ marginBottom: 0 }}>
