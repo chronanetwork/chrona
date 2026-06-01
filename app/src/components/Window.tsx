@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 
 /**
- * A warm "OS window" panel: title bar with traffic-light controls + a
- * monospace filename-style title, and a body.
+ * A terminal-style panel: thin border, hard offset shadow, a header with an
+ * orange marker and a monospace title. Sharp corners — not a rounded SaaS box.
  */
 export function Window({
   title,
@@ -20,11 +20,7 @@ export function Window({
   return (
     <div className={`window ${tile ? "tile" : ""} ${className}`}>
       <div className="titlebar">
-        <span className="win-dots">
-          <i />
-          <i />
-          <i />
-        </span>
+        <span className="marker" />
         <span className="win-title">{title}</span>
       </div>
       <div className="win-body" style={bodyStyle}>

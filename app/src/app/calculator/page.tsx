@@ -83,7 +83,7 @@ export default function CalculatorPage() {
 
       <div className="narrow" style={{ display: "grid", gap: 16 }}>
         {/* Lookup */}
-        <Window title="kairo://lookup">
+        <Window title="KAIRO :: LOOKUP">
           <div className="field">
             <input
               className="input"
@@ -114,7 +114,7 @@ export default function CalculatorPage() {
         </Window>
 
         {/* Calculator */}
-        <Window title="kairo://calculator">
+        <Window title="KAIRO :: CALCULATOR">
           <div className="calc-row">
             <label>
               Your hash rate
@@ -176,7 +176,7 @@ export default function CalculatorPage() {
         </Window>
 
         {/* Earnings */}
-        <Window title="kairo://earnings" bodyStyle={{ textAlign: "center" }}>
+        <Window title="KAIRO :: EARNINGS" bodyStyle={{ textAlign: "center" }}>
           <div className="stat-sub" style={{ marginTop: 0 }}>you would mine</div>
           <div className="stat-big">{fmt(perDay, perDay < 10 ? 2 : 0)}</div>
           <div className="stat-sub">KAIRO / day</div>

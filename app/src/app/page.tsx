@@ -5,61 +5,74 @@ import { Window } from "@/components/Window";
 export default function Home() {
   return (
     <main>
-      {/* Hero — open on the desktop */}
+      {/* Hero */}
       <section className="container hero">
-        <span className="eyebrow">proof of activity</span>
-        <h1>
-          Mine $KAIRO with your wallet&apos;s <em>history</em>
-        </h1>
-        <p className="lede">
-          Kairo recognizes and rewards the wallets that actually use Solana. Your real on-chain
-          history — age, trades, volume, conviction — becomes your mining hash rate. No hardware,
-          no lockups. Just real activity, fairly rewarded.
-        </p>
-        <div className="hero-cta">
-          <Link className="btn" href="#dashboard">Start mining</Link>
-          <Link className="btn btn-ghost" href="/calculator">Check any wallet</Link>
+        <div className="folio">
+          <span className="side">Proof of Activity</span>
+          <span className="mid">— Kairo —</span>
+          <span className="side">Solana · Devnet Live</span>
         </div>
-        <div className="trust-line">
-          <span>◆ non-custodial</span>
-          <span>◆ open source</span>
-          <span>◆ one signed transaction</span>
+
+        <div className="hero-grid">
+          <div>
+            <span className="eyebrow">Proof of Activity Mining</span>
+            <h1>
+              Your wallet history is your <em>hashrate</em>.
+            </h1>
+            <p className="lede">
+              Kairo rewards real Solana activity — age, trades, volume, and conviction — without
+              GPUs, ASICs, or staking capital.
+            </p>
+            <div className="hero-cta">
+              <Link className="btn" href="#dashboard">Start mining</Link>
+              <Link className="btn btn-ghost" href="/calculator">Check wallet score</Link>
+            </div>
+          </div>
+
+          <div>
+            <div className="stamp-lg"><img src="/logo.png" alt="Kairo" /></div>
+            <Window title="KAIRO :: SPEC">
+              <div className="kv"><span className="k">Supply</span><span className="v">21,000,000</span></div>
+              <div className="kv"><span className="k">Emission</span><span className="v">power-law</span></div>
+              <div className="kv"><span className="k">Custody</span><span className="v">non-custodial</span></div>
+              <div className="kv"><span className="k">Hashrate</span><span className="v">your history</span></div>
+              <div className="kv"><span className="k">Network</span><span className="v">devnet · live</span></div>
+            </Window>
+          </div>
         </div>
       </section>
 
-      {/* How it works — three little windows */}
+      {/* How it works */}
       <section className="container section" id="how">
         <div className="section-head">
-          <h2>Three steps to start earning</h2>
-          <p>Connect, get scored from your public on-chain history, and mine continuously.</p>
+          <h2>How it works</h2>
+          <p>Connect, let your on-chain history become a hashrate, and mine $KAIRO continuously.</p>
         </div>
         <div className="grid-3">
-          <Window tile title={<><span className="accent">01</span> · get-scored</>}>
+          <Window tile title={<><span className="accent">01</span> / connect</>}>
             <div className="step">
-              <h3>Get scored</h3>
+              <h3>Connect wallet</h3>
               <p>
-                Connect and see your hash rate instantly — a transparent breakdown of wallet age,
-                trades, volume, and how long you hold. Open-source and deterministic: anyone can
-                recompute your number.
+                Connect any Solana wallet. Kairo reads only your public address and computes your
+                score for free — no transaction, no risk.
               </p>
             </div>
           </Window>
-          <Window tile title={<><span className="accent">02</span> · start-mining</>}>
+          <Window tile title={<><span className="accent">02</span> / score</>}>
             <div className="step">
-              <h3>Start mining</h3>
+              <h3>Activity becomes hashrate</h3>
               <p>
-                Pay a one-time 0.1 SOL initialization and register on-chain. Your wallet then mines
-                $KAIRO around the clock, sharing each block in proportion to your hash rate — no
-                winner-take-all.
+                Your history — wallet age, real trades, USD volume, and how long you hold — is
+                distilled into a single hashrate. Open-source and deterministic.
               </p>
             </div>
           </Window>
-          <Window tile title={<><span className="accent">03</span> · claim</>}>
+          <Window tile title={<><span className="accent">03</span> / mine</>}>
             <div className="step">
-              <h3>Claim anytime</h3>
+              <h3>Mine $KAIRO</h3>
               <p>
-                Rewards accrue continuously and are yours to claim whenever you like. The program
-                mints fresh $KAIRO straight to your wallet — capped at 21,000,000 forever.
+                Pay a one-time 0.1 SOL init and mine continuously, sharing every block by your
+                portion of total hashrate. Claim to your wallet anytime.
               </p>
             </div>
           </Window>
@@ -69,8 +82,8 @@ export default function Home() {
       {/* Dashboard */}
       <section className="container section" id="dashboard">
         <div className="section-head">
-          <h2>Your mining dashboard</h2>
-          <p>Connect to preview your hash rate, start mining, and claim your $KAIRO.</p>
+          <h2>Your terminal</h2>
+          <p>Connect to preview your hashrate, start mining, and claim your $KAIRO.</p>
         </div>
         <div className="narrow">
           <Mining />
@@ -80,38 +93,35 @@ export default function Home() {
       {/* Safety */}
       <section className="container section">
         <div className="section-head">
-          <span className="eyebrow">connect with confidence</span>
-          <h2>Built to be safe — and verifiable</h2>
-          <p>
-            You never have to take our word for anything. Here&apos;s exactly what connecting does,
-            and what it can&apos;t do.
-          </p>
+          <span className="eyebrow">Connect with confidence</span>
+          <h2>Safe by design, verifiable by anyone</h2>
+          <p>Exactly what connecting does — and what it can never do.</p>
         </div>
         <div className="grid-3">
-          <Window tile title="never-touch-funds.txt">
+          <Window tile title="non-custodial">
             <div className="step">
-              <h3 style={{ fontSize: 18 }}>We never touch your funds</h3>
+              <h3 style={{ fontSize: 21 }}>We never touch funds</h3>
               <p>
-                Fully non-custodial. Connecting only lets us read your public address and lets you
-                sign your own transactions. We can never move, spend, or access your assets.
+                Connecting only reads your public address and lets you sign your own transactions.
+                Kairo can never move, spend, or access your assets.
               </p>
             </div>
           </Window>
-          <Window tile title="one-transaction.txt">
+          <Window tile title="one-signed-tx">
             <div className="step">
-              <h3 style={{ fontSize: 18 }}>One transaction, in your control</h3>
+              <h3 style={{ fontSize: 21 }}>One transaction</h3>
               <p>
-                Mining is a single transaction you review and approve in your own wallet — a 0.1 SOL
-                fee to the treasury, nothing more. Disconnect anytime.
+                Mining is a single transaction you review in your wallet — a 0.1 SOL fee to the
+                treasury, nothing more. Disconnect anytime.
               </p>
             </div>
           </Window>
-          <Window tile title="open-and-capped.txt">
+          <Window tile title="open + capped">
             <div className="step">
-              <h3 style={{ fontSize: 18 }}>Open source &amp; capped</h3>
+              <h3 style={{ fontSize: 21 }}>Open source &amp; capped</h3>
               <p>
-                Every line — program, scorer, and this app — is public and auditable. Supply is
-                hard-capped at 21,000,000 $KAIRO, enforced on-chain. Nothing hidden.
+                Program, scorer, and app are all public and auditable. Supply is hard-capped at
+                21,000,000 $KAIRO, enforced on-chain.
               </p>
             </div>
           </Window>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useConnection, useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { projectedDailyKairo } from "@kairo/sdk";
@@ -122,7 +122,7 @@ export function Mining() {
 
   if (!publicKey) {
     return (
-      <Window title="kairo://connect" bodyStyle={{ textAlign: "center", padding: 30 }}>
+      <Window title="KAIRO :: CONNECT" bodyStyle={{ textAlign: "center", padding: 30 }}>
         <h3 style={{ fontSize: 22 }}>Connect your wallet</h3>
         <p className="muted" style={{ margin: "8px auto 18px", maxWidth: "42ch", lineHeight: 1.55 }}>
           See your hash rate for free — no transaction, no commitment. Connecting only reads your
@@ -137,7 +137,7 @@ export function Mining() {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <Window title={<>kairo://score{miner ? "" : " · preview"}</>}>
+      <Window title={<>KAIRO :: SCORE{miner ? "" : " :: PREVIEW"}</>}>
         <div className="stat-big">{previewing && !score ? "…" : fmt(score, 0)}</div>
         <div className="stat-sub">{miner ? "your hash rate" : "your hash rate · preview"}</div>
 
@@ -171,7 +171,7 @@ export function Mining() {
       </Window>
 
       {miner && (
-        <Window title="kairo://claim" bodyStyle={{ textAlign: "center" }}>
+        <Window title="KAIRO :: CLAIM" bodyStyle={{ textAlign: "center" }}>
           <div className="stat-sub" style={{ marginTop: 0 }}>claimable now</div>
           <div className="stat-big">{fmt(claimable)}</div>
           <div className="stat-sub">KAIRO</div>

@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="container">
               <div className="footer-inner">
                 <div className="brand">
-                  <span className="tile"><img src="/logo.png" alt="" /></span>
+                  <span className="stamp"><img src="/logo.png" alt="" /></span>
                   <b>Kairo</b>
                 </div>
                 <small>non-custodial · open source · your keys never leave your wallet</small>
