@@ -195,6 +195,59 @@ a { color: var(--orange); text-decoration: none; }
 .chg.up { color: #93a85e; }
 .chg.down { color: #d76a4a; }
 
+/* buyback & burn tracker */
+.bb {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.bb-cell {
+  padding: 22px 24px;
+  border-right: 1px solid var(--line-2);
+}
+.bb-cell:last-of-type { border-right: none; }
+.bb-v {
+  font-family: var(--serif);
+  font-size: 34px;
+  line-height: 1.02;
+  color: var(--ink);
+}
+.bb-u { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.06em; }
+.bb-l {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-top: 8px;
+}
+.bb-sub {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 10px;
+  min-height: 1em;
+}
+.bb-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-top: 1px solid var(--line-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+.bb-foot a { color: var(--muted); text-decoration: none; }
+.bb-foot a:hover { color: var(--accent); }
+.bb-cap { color: var(--accent); }
+@media (max-width: 640px) {
+  .bb { grid-template-columns: 1fr; }
+  .bb-cell { border-right: none; border-bottom: 1px solid var(--line-2); }
+}
+
 /* big logo emblem */
 .stamp-lg {
   margin: 0 auto 18px;

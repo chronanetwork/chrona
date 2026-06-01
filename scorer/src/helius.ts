@@ -9,7 +9,7 @@ const USDT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
 const STABLES = new Set([USDC, USDT]);
 const QUOTE = new Set([WSOL, USDC, USDT]);
 
-const TX_LIMIT = 1000; // gTFA returns up to 1000 full txs per call
+export const TX_LIMIT = 1000; // gTFA returns up to 1000 full txs per call
 const SHORT_TIMEOUT_MS = 8_000;
 const FULL_TIMEOUT_MS = 15_000; // full-transaction payloads are larger
 
@@ -35,7 +35,7 @@ export interface Measurement extends WalletActivity {
   capped: { transactions: boolean };
 }
 
-function rpcUrl(cluster: string, apiKey: string): string {
+export function rpcUrl(cluster: string, apiKey: string): string {
   const host = cluster === "devnet" ? "devnet" : "mainnet";
   return `https://${host}.helius-rpc.com/?api-key=${apiKey}`;
 }
@@ -70,7 +70,7 @@ async function rpc(url: string, method: string, params: unknown[], timeoutMs: nu
 }
 
 /** Helius getTransactionsForAddress. */
-function gtfa(url: string, address: string, opts: Record<string, unknown>, timeoutMs: number) {
+export function gtfa(url: string, address: string, opts: Record<string, unknown>, timeoutMs: number) {
   return rpc(url, "getTransactionsForAddress", [address, opts], timeoutMs);
 }
 
@@ -89,7 +89,7 @@ function uiAmount(b: any): number {
   return raw / 10 ** dec;
 }
 
-function txDeltas(entry: any, wallet: string) {
+export function txDeltas(entry: any, wallet: string) {
   const meta = entry.meta;
   const msg = entry.transaction?.message;
   const tokenDelta = new Map<string, number>();

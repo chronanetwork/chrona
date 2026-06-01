@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mining } from "@/components/Mining";
 import { Stats } from "@/components/Stats";
+import { BuybackBurn } from "@/components/BuybackBurn";
 import { Window } from "@/components/Window";
 
 export default function Home() {
@@ -93,6 +94,21 @@ export default function Home() {
             <Mining />
           </div>
         </div>
+      </section>
+
+      {/* Buyback & burn */}
+      <section className="container section" id="buyback">
+        <div className="section-head">
+          <span className="eyebrow">Fees at work</span>
+          <h2>Buyback &amp; burn</h2>
+          <p>
+            SOL the dev wallet has spent buying $KAIRO back off the market, and the supply it has
+            permanently burned. Counted straight from on-chain history.
+          </p>
+        </div>
+        <Window title="BUYBACK :: BURN" bodyStyle={{ padding: 0 }}>
+          <BuybackBurn />
+        </Window>
       </section>
 
       {/* Safety */}

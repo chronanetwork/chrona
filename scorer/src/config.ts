@@ -12,6 +12,8 @@ export interface ScorerConfig {
   keeperIntervalMs: number;
   keeperMaxPerCycle: number;
   jupApiKey: string;
+  /** Wallet that performs $KAIRO buybacks/burns (tracked on the dev dashboard). */
+  devWallet: string;
 }
 
 export function loadConfig(): ScorerConfig {
@@ -34,5 +36,6 @@ export function loadConfig(): ScorerConfig {
     keeperIntervalMs: Number(process.env.KEEPER_INTERVAL_MS ?? 1_800_000), // 30 min
     keeperMaxPerCycle: Number(process.env.KEEPER_MAX_PER_CYCLE ?? 25),
     jupApiKey: process.env.JUP_API_KEY ?? "",
+    devWallet: process.env.DEV_WALLET ?? "B1xtqSHWRaGMpPkfgkFYPsLkvQKzF7pLUckTF53kairo",
   };
 }

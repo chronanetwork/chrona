@@ -7,6 +7,7 @@ import { loadOracleKeypair, signAttestation } from "./attest";
 import { startKeeper } from "./keeper";
 import { getMarketPrices } from "./marketPrice";
 import { getNetworkStats } from "./networkStats";
+import { getBuybackBurnStats } from "./buybackBurn";
 
 const config = loadConfig();
 const oracle = loadOracleKeypair();
@@ -68,6 +69,11 @@ const server = createServer(async (req, res) => {
         getNetworkStats(config.keeperRpcUrl),
       ]);
       return json(res, 200, { ...prices, ...net });
+    }
+
+    // $KAIRO buyback + burn tracker (dev wallet history, cached ~5 min).
+    if (url.pathname === "/buyback") {
+      return json(res, 200, await getBuybackBurnStats(config.heliusApiKey, config.devWallet, config.cluster));
     }
 
     // GET /score/:wallet  → free preview (no signature)

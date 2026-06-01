@@ -89,6 +89,27 @@ export async function fetchStats(): Promise<LiveStats> {
   return res.json();
 }
 
+export interface BuybackBurnStats {
+  devWallet: string;
+  solBoughtBack: number;
+  kairoBoughtBack: number;
+  kairoBurned: number;
+  buybackTxs: number;
+  burnTxs: number;
+  lastBuybackTs: number | null;
+  lastBurnTs: number | null;
+  txScanned: number;
+  capped: boolean;
+  updatedAt: number;
+}
+
+/** $KAIRO buyback + burn totals from the dev wallet (cached server-side). */
+export async function fetchBuyback(): Promise<BuybackBurnStats> {
+  const res = await fetch(`${SCORER_URL}/buyback`, { signal: AbortSignal.timeout(30_000) });
+  if (!res.ok) throw new Error(`buyback: ${res.status}`);
+  return res.json();
+}
+
 /** Preview a wallet's score (no signature). */
 export async function previewScore(wallet: string): Promise<any> {
   const res = await fetch(`${SCORER_URL}/score/${wallet}`, {
