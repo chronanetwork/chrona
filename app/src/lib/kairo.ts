@@ -59,7 +59,7 @@ export interface SignedAttestation {
   measurement?: any;
 }
 
-const SCORER_TIMEOUT_MS = 30_000;
+const SCORER_TIMEOUT_MS = 45_000;
 
 /** Preview a wallet's score (no signature). */
 export async function previewScore(wallet: string): Promise<any> {

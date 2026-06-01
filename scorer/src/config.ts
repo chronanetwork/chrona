@@ -17,7 +17,7 @@ export function loadConfig(): ScorerConfig {
     cluster: (process.env.SCORER_CLUSTER as "mainnet" | "devnet") ?? "mainnet",
     attestationValiditySecs: Number(process.env.ATTESTATION_VALIDITY_SECS ?? 900),
     port: Number(process.env.PORT ?? 8787),
-    maxTxPages: Number(process.env.MAX_TX_PAGES ?? 2),
-    budgetMs: Number(process.env.MEASURE_BUDGET_MS ?? 20_000),
+    maxTxPages: Number(process.env.MAX_TX_PAGES ?? 10),
+    budgetMs: Number(process.env.MEASURE_BUDGET_MS ?? 30_000),
   };
 }
