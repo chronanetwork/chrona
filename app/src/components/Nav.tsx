@@ -31,8 +31,8 @@ export function Nav() {
           <b>Kairo</b>
         </Link>
         <div className="nav-links">
-          <Link className="link" href="/#how">How it works</Link>
           <Link className="link" href="/calculator">Score</Link>
+          <Link className="link" href="/docs">Docs</Link>
           <a className="icon-btn" href={X_URL} target="_blank" rel="noreferrer" aria-label="Kairo on X">
             <XIcon />
           </a>

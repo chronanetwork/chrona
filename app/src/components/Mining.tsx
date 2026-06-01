@@ -137,6 +137,22 @@ export function Mining() {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
+      {miner && (
+        <Window title="KAIRO :: CLAIM" bodyStyle={{ textAlign: "center" }}>
+          <div className="stat-sub" style={{ marginTop: 0 }}>claimable now</div>
+          <div className="stat-big">{fmt(claimable)}</div>
+          <div className="stat-sub">KAIRO · {fmt(dailyProjection)} / day</div>
+          <button
+            className="btn full"
+            style={{ marginTop: 18 }}
+            disabled={busy || claimable <= 0}
+            onClick={onClaim}
+          >
+            {busy ? "Working…" : "Claim to wallet"}
+          </button>
+        </Window>
+      )}
+
       <Window title={<>KAIRO :: SCORE{miner ? "" : " :: PREVIEW"}</>}>
         <div className="stat-big">{previewing && !score ? "…" : fmt(score, 0)}</div>
         <div className="stat-sub">{miner ? "your hash rate" : "your hash rate · preview"}</div>
@@ -169,22 +185,6 @@ export function Mining() {
           </button>
         )}
       </Window>
-
-      {miner && (
-        <Window title="KAIRO :: CLAIM" bodyStyle={{ textAlign: "center" }}>
-          <div className="stat-sub" style={{ marginTop: 0 }}>claimable now</div>
-          <div className="stat-big">{fmt(claimable)}</div>
-          <div className="stat-sub">KAIRO</div>
-          <button
-            className="btn full"
-            style={{ marginTop: 18 }}
-            disabled={busy || claimable <= 0}
-            onClick={onClaim}
-          >
-            {busy ? "Working…" : "Claim"}
-          </button>
-        </Window>
-      )}
 
       {msg && <p className="msg">{msg}</p>}
     </div>

@@ -32,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
                 <small>non-custodial · open source · your keys never leave your wallet</small>
                 <div className="footer-links">
+                  <a href="/docs">Docs</a>
                   <a href={GITHUB_URL} target="_blank" rel="noreferrer">GitHub</a>
                   <a href={X_URL} target="_blank" rel="noreferrer">X</a>
                 </div>
