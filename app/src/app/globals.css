@@ -270,14 +270,21 @@ input[type="range"] { width: 100%; margin: 12px 0 0; accent-color: var(--orange)
 }
 .footer-links a:hover { color: var(--orange); }
 
-/* ---------- wallet adapter (flat orange, mono, sharp) ---------- */
+/* ---------- wallet adapter (flat orange, mono, sharp, compact) ---------- */
 .wallet-adapter-button-trigger {
   background: var(--orange) !important; color: #17110d !important; border-radius: 2px !important;
   font-family: var(--mono) !important; font-weight: 600 !important; font-size: 12px !important;
-  letter-spacing: 0.08em !important; text-transform: uppercase !important;
-  height: auto !important; padding: 11px 16px !important;
+  letter-spacing: 0.04em !important; text-transform: none !important;
+  height: 36px !important; padding: 0 12px !important; line-height: 1 !important;
   box-shadow: var(--hard-sm) !important;
 }
+/* shrink the wallet icon so the connected pill isn't bulky */
+.wallet-adapter-button-start-icon,
+.wallet-adapter-button-end-icon {
+  width: 15px !important; height: 15px !important; margin: 0 6px 0 0 !important;
+}
+.wallet-adapter-button-start-icon img,
+.wallet-adapter-button-end-icon img { width: 15px !important; height: 15px !important; }
 .wallet-adapter-modal-wrapper { background: var(--panel) !important; color: var(--ink) !important; border: 1px solid var(--line-2) !important; border-radius: 3px !important; }
 .wallet-adapter-modal-title { color: var(--ink) !important; font-family: var(--serif) !important; }
 .wallet-adapter-button:not(.wallet-adapter-button-trigger) { font-family: var(--mono) !important; color: var(--ink) !important; }
