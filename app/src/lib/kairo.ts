@@ -61,6 +61,45 @@ export interface SignedAttestation {
 
 const SCORER_TIMEOUT_MS = 45_000;
 
+export interface MarketPrices {
+  kairoUsd: number | null;
+  kairoChange24h: number | null;
+  solUsd: number | null;
+}
+
+/** Live $KAIRO + SOL prices (via the scorer's Jupiter proxy). */
+export async function fetchPrices(): Promise<MarketPrices> {
+  const res = await fetch(`${SCORER_URL}/price`, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error(`price: ${res.status}`);
+  return res.json();
+}
+
+export interface NetworkStats {
+  active: boolean;
+  totalHashRate: number;
+  genesisTs: number;
+  miners: number;
+  minedKairo: number;
+}
+
+/** On-chain network stats: pool hashrate, miner count, KAIRO mined so far. */
+export async function fetchNetworkStats(program: Program): Promise<NetworkStats> {
+  const { cumulativeEmissionKairo } = await import("@kairo/sdk");
+  const g: any = await fetchGlobal(program).catch(() => null);
+  if (!g) return { active: false, totalHashRate: 0, genesisTs: 0, miners: 0, minedKairo: 0 };
+  const minerClient: any = (program.account as any).miner;
+  const miners: any[] = await minerClient.all([{ dataSize: minerClient.size }]).catch(() => []);
+  const genesisTs = Number(g.genesisTs.toString());
+  const elapsed = genesisTs ? Math.max(0, Math.floor(Date.now() / 1000) - genesisTs) : 0;
+  return {
+    active: g.active,
+    totalHashRate: Number(g.totalHashRate.toString()),
+    genesisTs,
+    miners: miners.length,
+    minedKairo: g.active ? cumulativeEmissionKairo(elapsed) : 0,
+  };
+}
+
 /** Preview a wallet's score (no signature). */
 export async function previewScore(wallet: string): Promise<any> {
   const res = await fetch(`${SCORER_URL}/score/${wallet}`, {

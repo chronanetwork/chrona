@@ -13,6 +13,7 @@ import {
   fetchAttestation,
   fetchGlobal,
   fetchMiner,
+  fetchPrices,
   getProgram,
   previewScore,
 } from "@/lib/kairo";
@@ -30,8 +31,19 @@ export function Mining() {
   const [preview, setPreview] = useState<any>(null);
   const [previewing, setPreviewing] = useState(false);
   const [claimable, setClaimable] = useState(0);
+  const [usd, setUsd] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+
+  // Live $KAIRO price for $-denominated projections.
+  useEffect(() => {
+    const load = () => fetchPrices().then((p) => setUsd(p.kairoUsd)).catch(() => {});
+    load();
+    const id = setInterval(load, 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const inUsd = (kairo: number) =>
+    usd != null ? ` · $${(kairo * usd).toLocaleString(undefined, { maximumFractionDigits: kairo * usd < 1 ? 4 : 2 })}` : "";
 
   // Stable program instance — only rebuilt when the wallet/connection changes.
   const program = useMemo(
@@ -164,7 +176,7 @@ export function Mining() {
         <Window title="KAIRO :: CLAIM" bodyStyle={{ textAlign: "center" }}>
           <div className="stat-sub" style={{ marginTop: 0 }}>claimable now</div>
           <div className="stat-big">{fmt(claimable)}</div>
-          <div className="stat-sub">KAIRO · {fmt(dailyProjection)} / day</div>
+          <div className="stat-sub">KAIRO{inUsd(claimable)} · {fmt(dailyProjection)}/day</div>
           <button
             className="btn full"
             style={{ marginTop: 18 }}
@@ -198,7 +210,7 @@ export function Mining() {
           )}
           <div className="kv">
             <span className="k">projected / day</span>
-            <span className="v">{fmt(dailyProjection)} KAIRO</span>
+            <span className="v">{fmt(dailyProjection)} KAIRO{inUsd(dailyProjection)}</span>
           </div>
           {global && (
             <div className="kv">

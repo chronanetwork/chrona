@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Mining } from "@/components/Mining";
+import { Stats } from "@/components/Stats";
 import { Window } from "@/components/Window";
 
 export default function Home() {
@@ -33,14 +34,16 @@ export default function Home() {
             <div className="stamp-lg"><img src="/logo.png" alt="Kairo" /></div>
             <Window title="KAIRO :: SPEC">
               <div className="kv"><span className="k">Supply</span><span className="v">21,000,000</span></div>
-              <div className="kv"><span className="k">Emission</span><span className="v">power-law</span></div>
+              <div className="kv"><span className="k">Emission</span><span className="v">front-loaded</span></div>
               <div className="kv"><span className="k">Custody</span><span className="v">non-custodial</span></div>
               <div className="kv"><span className="k">Hashrate</span><span className="v">your history</span></div>
               <div className="kv"><span className="k">Program</span><span className="v">mainnet · verified</span></div>
-              <div className="kv"><span className="k">Mining</span><span className="v">opens at launch</span></div>
+              <div className="kv"><span className="k">Mining</span><span className="v">live</span></div>
             </Window>
           </div>
         </div>
+
+        <Stats />
       </section>
 
       {/* How it works + live rig, side by side */}

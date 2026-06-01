@@ -158,6 +158,43 @@ a { color: var(--orange); text-decoration: none; }
 }
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
 
+/* live hero stats strip */
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 30px;
+}
+@media (max-width: 700px) { .hero-stats { grid-template-columns: repeat(2, 1fr); } }
+.hstat {
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: 3px;
+  padding: 14px 16px;
+  box-shadow: var(--hard-sm);
+}
+.hstat-v {
+  font-family: var(--serif);
+  font-size: 25px;
+  line-height: 1.05;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hstat-l {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-top: 8px;
+}
+.chg { font-family: var(--mono); font-size: 11px; }
+.chg.up { color: #93a85e; }
+.chg.down { color: #d76a4a; }
+
 /* big logo emblem */
 .stamp-lg {
   margin: 0 auto 18px;

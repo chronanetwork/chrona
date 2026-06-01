@@ -5,6 +5,7 @@ import { measureWallet } from "./helius";
 import { computeScore } from "./score";
 import { loadOracleKeypair, signAttestation } from "./attest";
 import { startKeeper } from "./keeper";
+import { getMarketPrices } from "./marketPrice";
 
 const config = loadConfig();
 const oracle = loadOracleKeypair();
@@ -52,6 +53,11 @@ const server = createServer(async (req, res) => {
 
     if (url.pathname === "/health") {
       return json(res, 200, { ok: true, oracle: oracle.publicKey.toBase58(), cluster: config.cluster });
+    }
+
+    // Live $KAIRO + SOL prices (Jupiter, proxied so the key stays server-side).
+    if (url.pathname === "/price") {
+      return json(res, 200, await getMarketPrices(config.jupApiKey));
     }
 
     // GET /score/:wallet  → free preview (no signature)

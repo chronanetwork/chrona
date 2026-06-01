@@ -5,7 +5,7 @@ import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { dailyEmissionKairo, MAX_SCORE, MIN_SCORE } from "@kairo/sdk";
 import { Window } from "@/components/Window";
-import { fetchGlobal, getReadonlyProgram, previewScore } from "@/lib/kairo";
+import { fetchGlobal, fetchPrices, getReadonlyProgram, previewScore } from "@/lib/kairo";
 
 const fmt = (n: number, d = 0) =>
   Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: d }) : "—";
@@ -23,8 +23,10 @@ export default function CalculatorPage() {
   const [scoredWallet, setScoredWallet] = useState("");
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState("");
+  const [usd, setUsd] = useState<number | null>(null);
 
   useEffect(() => {
+    fetchPrices().then((p) => setUsd(p.kairoUsd)).catch(() => {});
     const program = getReadonlyProgram(connection);
     fetchGlobal(program)
       .then((g: any) => {
@@ -179,11 +181,16 @@ export default function CalculatorPage() {
         <Window title="KAIRO :: EARNINGS" bodyStyle={{ textAlign: "center" }}>
           <div className="stat-sub" style={{ marginTop: 0 }}>you would mine</div>
           <div className="stat-big">{fmt(perDay, perDay < 10 ? 2 : 0)}</div>
-          <div className="stat-sub">KAIRO / day</div>
+          <div className="stat-sub">
+            KAIRO / day
+            {usd != null
+              ? ` · $${(perDay * usd).toLocaleString(undefined, { maximumFractionDigits: perDay * usd < 10 ? 2 : 0 })}`
+              : ""}
+          </div>
           <div className="stat-grid">
-            <Cell label="per week" v={perDay * 7} />
-            <Cell label="per month" v={perDay * 30} />
-            <Cell label="per year" v={perDay * 365} />
+            <Cell label="per week" v={perDay * 7} usd={usd} />
+            <Cell label="per month" v={perDay * 30} usd={usd} />
+            <Cell label="per year" v={perDay * 365} usd={usd} />
           </div>
           <p className="msg">
             Projection at the current emission rate. Earnings fall as the network grows or emission
@@ -206,10 +213,15 @@ function Factor({ label, v }: { label: string; v: number }) {
   );
 }
 
-function Cell({ label, v }: { label: string; v: number }) {
+function Cell({ label, v, usd }: { label: string; v: number; usd: number | null }) {
   return (
     <div className="stat-cell">
       <div className="v">{fmt(v, v < 10 ? 2 : 0)}</div>
+      {usd != null && (
+        <div className="l" style={{ color: "var(--muted)" }}>
+          ${(v * usd).toLocaleString(undefined, { maximumFractionDigits: v * usd < 10 ? 2 : 0 })}
+        </div>
+      )}
       <div className="l">{label}</div>
     </div>
   );

@@ -11,6 +11,7 @@ export interface ScorerConfig {
   keeperSecretKey: string;
   keeperIntervalMs: number;
   keeperMaxPerCycle: number;
+  jupApiKey: string;
 }
 
 export function loadConfig(): ScorerConfig {
@@ -32,5 +33,6 @@ export function loadConfig(): ScorerConfig {
     keeperSecretKey: process.env.KEEPER_SECRET_KEY ?? "",
     keeperIntervalMs: Number(process.env.KEEPER_INTERVAL_MS ?? 1_800_000), // 30 min
     keeperMaxPerCycle: Number(process.env.KEEPER_MAX_PER_CYCLE ?? 25),
+    jupApiKey: process.env.JUP_API_KEY ?? "",
   };
 }
