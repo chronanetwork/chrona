@@ -1,59 +1,58 @@
 # Tokenomics
 
-Kairo's emission is the **sum of two halving curves**: a sharp front-load *spike* that makes day one big, plus a slow *base* that holds emission near 5,000 KAIRO/day for years. So rewards drop fast at the start (rewarding the earliest miners) and then settle onto a long, gently-declining plateau.
+Kairo's emission is the **sum of two halving curves**: a sharp front-load *spike* that makes the first days big, plus a 1-year *base* that rides down from ~50,000 KAIRO/day. Rewards drop fast at the start (rewarding the earliest miners) and then taper toward the cap over a handful of years.
 
 ## Parameters
 
 | Parameter | Value |
 |---|---|
 | Decimals | 6 |
-| Genesis / launch supply (premine) | 100,000 KAIRO |
+| Genesis / launch supply (premine) | 1,000,000 KAIRO |
 | Hard cap | 21,000,000 KAIRO |
-| Mineable total (asymptote) | 20,900,000 KAIRO |
-| Day-1 emission | 30,000 KAIRO |
-| Spike component | ≈ 47,052 KAIRO total, half-life ≈ 0.91 days |
-| Base component | ≈ 20,852,948 KAIRO total, half-life ≈ 7.94 years |
+| Mineable total (asymptote) | 20,000,000 KAIRO |
+| Day-1 emission | 300,000 KAIRO |
+| Spike component | ≈ 957,239 KAIRO total, half-life ≈ 2.15 days |
+| Base component | ≈ 19,042,761 KAIRO total, half-life = 365 days |
 
 ## The curve
 
 ```
-E(t) = SPIKE·(1 − 2^(−t/H_spike)) + BASE·(1 − 2^(−t/H_base)),   clamped at 20,900,000
+E(t) = SPIKE·(1 − 2^(−t/H_spike)) + BASE·(1 − 2^(−t/H_base)),   clamped at 20,000,000
 ```
 
-The two component totals sum **exactly** to the 20,900,000 mineable cap. The spike (≈ 0.91-day half-life) is essentially spent within ~10 days; from then on emission rides the base curve at ≈ 5,000 KAIRO/day, halving only every ~7.94 years. Combined with the 100k premine this approaches — but never quite reaches — the **21,000,000 hard cap**, enforced on-chain.
+The two component totals sum **exactly** to the 20,000,000 mineable cap. The spike (≈ 2.15-day half-life) front-loads the first ~10 days; from then on emission rides the base curve down from ~50,000 KAIRO/day, halving each year. Combined with the 1M premine this approaches — but never quite reaches — the **21,000,000 hard cap**, enforced on-chain.
 
 ## Sanity checks
 
 | Horizon | Emitted that day | Cumulative mined |
 |---|---|---|
-| Day 1 | 30,000 | 30,000 |
-| Day 2 | ≈ 16,698 | ≈ 46,698 |
-| Day 3 | ≈ 10,468 | ≈ 57,166 |
-| Day 5 | ≈ 6,182 | ≈ 70,898 |
-| Day 10 | ≈ 5,000 | ≈ 96,810 |
-| Year 1 | ≈ 4,568 | ≈ 1.79M |
-| Year 5 | ≈ 3,223 | ≈ 7.42M |
-| Year 10 | ≈ 2,083 | ≈ 12.18M |
-| Year 50 | ≈ 64 | ≈ 20.63M (98.7%) |
+| Day 1 | 300,000 | 300,000 |
+| Day 2 | ≈ 227,193 | ≈ 527,193 |
+| Day 3 | ≈ 174,437 | ≈ 701,630 |
+| Day 10 | ≈ 50,000 | ≈ 1.28M |
+| Year 1 | ≈ 18,100 | ≈ 10.48M (52%) |
+| Year 2 | ≈ 9,050 | ≈ 15.24M (76%) |
+| Year 3 | ≈ 4,525 | ≈ 17.62M (88%) |
+| Year 5 | ≈ 1,130 | ≈ 19.40M (97%) |
 
 ## On-chain representation
 
 All amounts are in base units (1 KAIRO = 1e6 base units). Time is `Clock.unix_timestamp` (seconds).
 
 ```
-ASYMPTOTE_BASE     = 20_900_000 * 1e6     // mineable cap (= SPIKE + BASE)
-SPIKE_AMOUNT_BASE  = 47_051_945_457       // front-load total
-SPIKE_H_SECONDS    = 78_946               // ≈ 0.91 days
-BASE_AMOUNT_BASE   = 20_852_948_054_543   // plateau total
-BASE_H_SECONDS     = 250_560_000          // 2900 days ≈ 7.94 years
-PREMINE_BASE       = 100_000   * 1e6      // minted outside the program (DBC / devnet)
+ASYMPTOTE_BASE     = 20_000_000 * 1e6     // mineable cap (= SPIKE + BASE)
+SPIKE_AMOUNT_BASE  = 957_238_647_208      // front-load total
+SPIKE_H_SECONDS    = 185_703              // ≈ 2.15 days
+BASE_AMOUNT_BASE   = 19_042_761_352_792   // base total
+BASE_H_SECONDS     = 31_536_000           // 365 days
+PREMINE_BASE       = 1_000_000 * 1e6      // minted outside the program (DBC / devnet)
 ```
 
 The program never loops over blocks. The reward injected into the pool between two timestamps is the **closed-form difference** `ΔE = E(t_now) − E(t_last)`, floored to base units and clamped so program-minted supply can never exceed `ASYMPTOTE_BASE`. Each `2^(−t/H)` term uses an exact fixed-point binary-digit table, validated to **≤1 base-unit error** against a 60-digit reference. See [scoring-spec.md](scoring-spec.md) for hash rate and [architecture.md](architecture.md) for the accumulator.
 
 ## Launch & supply
 
-- **Mainnet:** the 100k premine is created by a Dynamic Bonding Curve (DBC) launch using Kairo's chosen mint address. The DBC must leave mint authority with the deployer so it can subsequently be handed to the program (see architecture).
-- **Devnet:** 100k is minted directly to the deployer; no DBC.
+- **Mainnet:** the 1,000,000 premine is created by a Dynamic Bonding Curve (DBC) launch using Kairo's chosen mint address. The DBC must leave mint authority with the deployer so it can subsequently be handed to the program (see architecture).
+- **Devnet:** the premine is minted directly to the deployer; no DBC.
 
 After launch, mint authority is transferred to a program PDA — from then on, the only new KAIRO that can ever exist is mined.

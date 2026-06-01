@@ -38,11 +38,11 @@ your share of this moment's emission  =  your hash rate / total network hash rat
 
 A sharp early burst that settles onto a long, steady plateau.
 
-- **100,000** $KAIRO at genesis (the launch supply).
-- **30,000** $KAIRO on day one, dropping fast — ~16,700 day two, ~10,500 day three — down to a **steady ~5,000 $KAIRO/day by day 10**, so the **earliest miners earn the most**.
-- From there it holds near ~5,000/day for years (gently halving every ~8 years), approaching a hard ceiling of **21,000,000** $KAIRO it never quite reaches.
+- **1,000,000** $KAIRO at genesis (the launch supply).
+- **300,000** $KAIRO on day one, dropping fast — ~227k day two, ~174k day three — down to a **steady ~50,000 $KAIRO/day by day 10**, so the **earliest miners earn the most**.
+- From there it rides down from ~50k/day (base half-life 1 year), approaching a hard ceiling of **21,000,000** $KAIRO it never quite reaches — ~97% mined by year 5.
 
-Mathematically it's the sum of two curves: a fast front-load spike plus a slow ~5k/day base. → [docs/tokenomics.md](docs/tokenomics.md)
+Mathematically it's the sum of two curves: a fast front-load spike plus a 1-year ~50k/day base. → [docs/tokenomics.md](docs/tokenomics.md)
 
 ## Built to be verified
 

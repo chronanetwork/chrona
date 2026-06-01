@@ -14,17 +14,17 @@ export const MINT = new PublicKey(
 export const DECIMALS = 6;
 export const ONE_KAIRO = 1_000_000n;
 /** Mineable cap, whole KAIRO (asymptote). */
-export const ASYMPTOTE_KAIRO = 20_900_000;
+export const ASYMPTOTE_KAIRO = 20_000_000;
 /** Hard cap incl. premine, whole KAIRO. */
 export const MAX_SUPPLY_KAIRO = 21_000_000;
 /** Launch supply, whole KAIRO. */
-export const PREMINE_KAIRO = 100_000;
+export const PREMINE_KAIRO = 1_000_000;
 // Emission = sum of two halving curves (front-load spike + ~5k/day base plateau).
 // E(t) = SPIKE·(1−2^(−t/H_spike)) + BASE·(1−2^(−t/H_base)), whole KAIRO.
-export const EMISSION_SPIKE_KAIRO = 47_051.945457;
-export const EMISSION_SPIKE_H_SECONDS = 78_946;
-export const EMISSION_BASE_KAIRO = 20_852_948.054543;
-export const EMISSION_BASE_H_SECONDS = 250_560_000;
+export const EMISSION_SPIKE_KAIRO = 957_238.647208;
+export const EMISSION_SPIKE_H_SECONDS = 185_703;
+export const EMISSION_BASE_KAIRO = 19_042_761.352792;
+export const EMISSION_BASE_H_SECONDS = 31_536_000;
 /** Initialization fee, lamports (0.1 SOL). */
 export const INIT_FEE_LAMPORTS = 100_000_000n;
 /** Top-off fee to restore hashrate to full, lamports (0.02 SOL). */

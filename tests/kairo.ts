@@ -54,13 +54,13 @@ describe("kairo", () => {
   const oracle = Keypair.generate();
   const treasury = Keypair.generate();
 
-  const [globalPda] = PublicKey.findProgramAddressSync([Buffer.from("global")], PROGRAM_ID);
+  const [globalPda] = PublicKey.findProgramAddressSync([Buffer.from("global-v2")], PROGRAM_ID);
   const [mintAuthPda] = PublicKey.findProgramAddressSync([Buffer.from("mint_auth")], PROGRAM_ID);
 
   let mint: PublicKey;
 
   const minerPda = (owner: PublicKey) =>
-    PublicKey.findProgramAddressSync([Buffer.from("miner"), owner.toBuffer()], PROGRAM_ID)[0];
+    PublicKey.findProgramAddressSync([Buffer.from("miner-v2"), owner.toBuffer()], PROGRAM_ID)[0];
 
   async function fund(pubkey: PublicKey, sol = 5) {
     const sig = await connection.requestAirdrop(pubkey, sol * LAMPORTS_PER_SOL);

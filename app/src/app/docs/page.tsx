@@ -92,16 +92,16 @@ export default function DocsPage() {
             <h2>The emission curve</h2>
             <div className="prose">
               <p>
-                $KAIRO is front-loaded: it pays out fast at the start and then settles into a long,
-                steady drip. Day one mints <strong>30,000 $KAIRO</strong> to the whole network;
-                that drops quickly to around <strong>5,000 a day by day ten</strong> and then holds
-                in that neighborhood for years, easing down slowly.
+                $KAIRO is front-loaded: it pays out fast at the start and then tapers toward the
+                cap. Day one mints <strong>300,000 $KAIRO</strong> to the whole network; that eases
+                to around <strong>50,000 a day by day ten</strong>, then rides down from there
+                (base half-life 1 year) — about 97% mined by year 5.
               </p>
               <ul>
-                <li>Day 1 — ~30,000 / day</li>
-                <li>Day 10 — ~5,000 / day</li>
-                <li>Year 1 — ~4,500 / day</li>
-                <li>Year 10 — ~2,000 / day</li>
+                <li>Day 1 — ~300,000 / day</li>
+                <li>Day 10 — ~50,000 / day</li>
+                <li>Year 1 — ~18,000 / day (≈52% mined)</li>
+                <li>Year 3 — ~4,500 / day (≈88% mined)</li>
               </ul>
               <p>
                 It&apos;s the sum of two halving curves — a sharp early &ldquo;spike&rdquo; plus a
@@ -153,7 +153,7 @@ export default function DocsPage() {
               <ul>
                 <li>Standard SPL token, 6 decimals</li>
                 <li>Hard cap — 21,000,000, enforced on-chain</li>
-                <li>100,000 at genesis (the launch supply); everything else is mined</li>
+                <li>1,000,000 at genesis (the launch supply); everything else is mined</li>
                 <li>Mint authority is held by the program — no one can mint outside the rules</li>
               </ul>
               <p>

@@ -6,34 +6,34 @@ pub const DECIMALS: u8 = 6;
 /// Base units in one whole KAIRO (10^6).
 pub const ONE_KAIRO: u64 = 1_000_000;
 
-/// Total mineable supply, base units (21,000,000 cap − 100,000 premine).
+/// Total mineable supply, base units (21,000,000 cap − 1,000,000 premine).
 /// The asymptote that program-minted supply approaches but never reaches.
-pub const ASYMPTOTE_BASE: u64 = 20_900_000 * ONE_KAIRO;
+pub const ASYMPTOTE_BASE: u64 = 20_000_000 * ONE_KAIRO;
 
 /// Hard cap on total supply (premine + mined), base units.
 pub const MAX_SUPPLY_BASE: u64 = 21_000_000 * ONE_KAIRO;
 
 /// Premine / launch supply, base units (minted outside the program: DBC on
 /// mainnet, direct mint on devnet).
-pub const PREMINE_BASE: u64 = 100_000 * ONE_KAIRO;
+pub const PREMINE_BASE: u64 = 1_000_000 * ONE_KAIRO;
 
 // ---- Emission curve: sum of two halving curves (front-load + plateau) ----
 //
 // Cumulative E(t) = SPIKE·(1 − 2^(−t/H_spike)) + BASE·(1 − 2^(−t/H_base)).
-// A sharp ~0.9-day "spike" front-loads day one, then a slow ~7.9-year "base"
-// holds emission near 5,000 KAIRO/day for years before gently tapering. Result:
-// day-1 = 30,000 KAIRO, dropping to ~5,000/day by day 10 and staying in the
-// thousands for ~two decades. The two amounts sum exactly to ASYMPTOTE_BASE.
+// A sharp ~2.1-day "spike" front-loads the first days, then a 1-year "base"
+// rides down from ~50,000 KAIRO/day. Result: day-1 = 300,000 KAIRO, easing to
+// ~50,000/day by day 10 (300k→227k→174k→…→50k), ~97% mined by year 5. The two
+// amounts sum exactly to ASYMPTOTE_BASE.
 
-/// Front-load component total, base units (≈ 47,052 KAIRO).
-pub const SPIKE_AMOUNT_BASE: u128 = 47_051_945_457;
-/// Front-load half-life, seconds (≈ 0.914 days).
-pub const SPIKE_H_SECONDS: u64 = 78_946;
+/// Front-load component total, base units (≈ 957,239 KAIRO).
+pub const SPIKE_AMOUNT_BASE: u128 = 957_238_647_208;
+/// Front-load half-life, seconds (≈ 2.149 days).
+pub const SPIKE_H_SECONDS: u64 = 185_703;
 
-/// Plateau/base component total, base units (≈ 20,852,948 KAIRO).
-pub const BASE_AMOUNT_BASE: u128 = 20_852_948_054_543;
-/// Base half-life, seconds (2,900 days ≈ 7.94 years).
-pub const BASE_H_SECONDS: u64 = 250_560_000;
+/// Plateau/base component total, base units (≈ 19,042,761 KAIRO).
+pub const BASE_AMOUNT_BASE: u128 = 19_042_761_352_792;
+/// Base half-life, seconds (365 days).
+pub const BASE_H_SECONDS: u64 = 31_536_000;
 
 /// One-time mining initialization fee, in lamports (0.1 SOL).
 pub const INIT_FEE_LAMPORTS: u64 = 100_000_000;

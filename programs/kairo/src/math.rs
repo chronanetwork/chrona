@@ -1,7 +1,8 @@
 //! Fixed-point emission and reward-accumulator math.
 //!
 //! Emission is the sum of two continuous halving curves — a sharp front-load
-//! "spike" plus a slow ~5,000 KAIRO/day "base" plateau:
+//! "spike" (day-1 = 300,000 KAIRO) plus a 1-year "base" riding down from
+//! ~50,000 KAIRO/day:
 //!
 //! ```text
 //! E(t) = SPIKE·(1 − 2^(−t/H_spike)) + BASE·(1 − 2^(−t/H_base))
@@ -143,12 +144,11 @@ mod tests {
     /// 60-digit precision from the two-component curve. The fixed-point
     /// implementation matches these to ≤1 base unit.
     const REF: &[(u64, u64)] = &[
-        (DAY, 29_999_955_526),
-        (10 * DAY, 96_810_485_400),
-        (30 * DAY, 196_042_953_301),
-        (YEAR, 1_789_185_222_852),
-        (5 * YEAR, 7_418_873_900_433),
-        (10 * YEAR, 12_184_649_036_815),
+        (DAY, 299_999_965_564),
+        (10 * DAY, 1_277_396_514_253),
+        (30 * DAY, 2_011_738_771_431),
+        (YEAR, 10_478_619_323_604),
+        (5 * YEAR, 19_404_913_707_725),
     ];
 
     #[test]
@@ -178,26 +178,26 @@ mod tests {
     }
 
     #[test]
-    fn day_one_emission_is_about_30k() {
+    fn day_one_emission_is_about_300k() {
         let kairo = cumulative_emission(DAY) as f64 / 1e6;
-        assert!((kairo - 30_000.0).abs() < 0.1, "day-1 = {kairo} KAIRO");
+        assert!((kairo - 300_000.0).abs() < 1.0, "day-1 = {kairo} KAIRO");
     }
 
     #[test]
-    fn drops_to_5k_plateau_by_day_10() {
-        // 30k day 1, fast taper to ~5k/day by day 10, then it stays near 5k.
+    fn drops_to_50k_by_day_10() {
+        // 300k day 1, smooth taper to ~50k/day by day 10.
         let d = |n: u64| {
             (cumulative_emission(n * DAY) - cumulative_emission((n - 1) * DAY)) as f64 / 1e6
         };
-        assert!((d(1) - 30_000.0).abs() < 1.0, "day1 {}", d(1));
-        assert!((d(2) - 16_698.0).abs() < 2.0, "day2 {}", d(2));
-        assert!((d(3) - 10_468.0).abs() < 2.0, "day3 {}", d(3));
-        assert!((d(10) - 5_000.0).abs() < 2.0, "day10 {}", d(10));
+        assert!((d(1) - 300_000.0).abs() < 1.0, "day1 {}", d(1));
+        assert!((d(2) - 227_193.0).abs() < 3.0, "day2 {}", d(2));
+        assert!((d(3) - 174_437.0).abs() < 3.0, "day3 {}", d(3));
+        assert!((d(10) - 50_000.0).abs() < 3.0, "day10 {}", d(10));
         // strictly decreasing through the taper
         assert!(d(1) > d(2) && d(2) > d(3) && d(3) > d(10));
-        // plateau: a year out it's still in the thousands (gentle decline)
+        // a year out it's still emitting thousands/day on the way to the cap
         let yearly = (cumulative_emission(366 * DAY) - cumulative_emission(365 * DAY)) as f64 / 1e6;
-        assert!(yearly > 4_000.0 && yearly < 5_000.0, "yr1 daily {yearly}");
+        assert!(yearly > 14_000.0 && yearly < 22_000.0, "yr1 daily {yearly}");
     }
 
     #[test]
