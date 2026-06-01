@@ -111,6 +111,49 @@ export async function fetchBuyback(): Promise<BuybackBurnStats> {
   return res.json();
 }
 
+export interface SeriesPoint {
+  t: string;
+  feesSol: number;
+  buybackSol: number;
+  kairoBurned: number;
+}
+
+export interface ProtocolMetrics {
+  devWallet: string;
+  feesSol: number;
+  initCount: number;
+  topoffCount: number;
+  buybackSol: number;
+  kairoBought: number;
+  kairoBurned: number;
+  buybackTxs: number;
+  burnTxs: number;
+  currentSupply: number;
+  lastBuybackTs: number | null;
+  lastBurnTs: number | null;
+  daily: SeriesPoint[];
+  hourly: SeriesPoint[];
+  txScanned: number;
+  capped: boolean;
+  updatedAt: number;
+  // merged live network stats + price
+  active?: boolean;
+  totalHashRate?: number;
+  miners?: number;
+  minedKairo?: number;
+  genesisTs?: number;
+  kairoUsd?: number | null;
+  kairoChange24h?: number | null;
+  solUsd?: number | null;
+}
+
+/** Full protocol metrics (fees/buyback/burn + series + network + price). */
+export async function fetchMetrics(): Promise<ProtocolMetrics> {
+  const res = await fetch(`${SCORER_URL}/metrics`, { signal: AbortSignal.timeout(15_000) });
+  if (!res.ok) throw new Error(`metrics: ${res.status}`);
+  return res.json();
+}
+
 /** Preview a wallet's score (no signature). */
 export async function previewScore(wallet: string): Promise<any> {
   const res = await fetch(`${SCORER_URL}/score/${wallet}`, {

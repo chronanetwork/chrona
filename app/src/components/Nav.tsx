@@ -32,6 +32,7 @@ export function Nav() {
         </Link>
         <div className="nav-links">
           <Link className="link" href="/calculator">Score</Link>
+          <Link className="link" href="/stats">Stats</Link>
           <Link className="link" href="/docs">Docs</Link>
           <a className="icon-btn" href={X_URL} target="_blank" rel="noreferrer" aria-label="Kairo on X">
             <XIcon />
