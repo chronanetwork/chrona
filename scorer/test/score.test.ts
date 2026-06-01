@@ -2,6 +2,7 @@ import assert from "node:assert";
 import { test } from "node:test";
 import {
   AGE_CAP_DAYS,
+  HOLD_90_DAYS,
   HOLD_CAP_DAYS,
   MAX_SCORE,
   MIN_SCORE,
@@ -55,7 +56,8 @@ test("a known reference vector", () => {
   const age = clamp(Math.log1p(365) / Math.log1p(AGE_CAP_DAYS));
   const tr = clamp(Math.log1p(50) / Math.log1p(TRADE_CAP));
   const vol = clamp(Math.log1p(50_000) / Math.log1p(VOL_CAP));
-  const hold = clamp(15 / HOLD_CAP_DAYS);
+  // hold curve: 0.9 by HOLD_90_DAYS, easing to 1.0 at HOLD_CAP_DAYS (15d here)
+  const hold = 0.9 + 0.1 * ((15 - HOLD_90_DAYS) / (HOLD_CAP_DAYS - HOLD_90_DAYS));
   const raw = WEIGHTS.age * age + WEIGHTS.trade * tr + WEIGHTS.vol * vol + WEIGHTS.hold * hold;
   const expected = Math.round(MIN_SCORE + raw * (MAX_SCORE - MIN_SCORE));
   assert.strictEqual(s.hashRate, expected);

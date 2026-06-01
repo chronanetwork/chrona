@@ -33,7 +33,9 @@ For hold-time, a position only counts if the token was **acquired via a qualifyi
 | `AGE_CAP_DAYS` | 730 | Diminishing returns past ~2 years. |
 | `TRADE_CAP` | 500 | Log saturation point for trade count. |
 | `VOL_CAP` | $1,000,000 | Log saturation point for volume. |
-| `HOLD_CAP_DAYS` | 30 | Hold time saturates at ~1 month. |
+| `HOLD_90_DAYS` | 3 | Hold time reaches 90% by 3 days. |
+| `HOLD_CAP_DAYS` | 30 | ...then saturates at 100% by ~1 month. |
+| `HOLD_STEP_DAYS` | 0.1 | Hold time counts in 0.1-day increments. |
 | `MIN_HR` | 100 | Floor hash rate (fresh wallet — low but nonzero). |
 | `MAX_HR` | 10,000 | Ceiling hash rate (keeps the system fair). |
 
@@ -45,7 +47,11 @@ Each sub-score is normalized to `[0, 1]`; trade and volume use `log1p` so gaming
 age_score   = clamp( log1p(age_days)   / log1p(AGE_CAP_DAYS), 0, 1 )
 trade_score = clamp( log1p(n_trades)   / log1p(TRADE_CAP),    0, 1 )
 vol_score   = clamp( log1p(usd_volume) / log1p(VOL_CAP),      0, 1 )
-hold_score  = clamp( median_hold_days  / HOLD_CAP_DAYS,       0, 1 )
+// hold_score ramps to 0.9 by HOLD_90_DAYS, then eases to 1.0 at HOLD_CAP_DAYS:
+hold_score  = d<=0 ? 0
+            : d>=HOLD_CAP_DAYS ? 1
+            : d<=HOLD_90_DAYS ? 0.9*(d/HOLD_90_DAYS)
+            : 0.9 + 0.1*((d-HOLD_90_DAYS)/(HOLD_CAP_DAYS-HOLD_90_DAYS))   // d = median_hold_days, rounded to 0.1
 
 raw = 0.25*age_score + 0.20*trade_score + 0.30*vol_score + 0.25*hold_score
 

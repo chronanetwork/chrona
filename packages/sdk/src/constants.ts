@@ -35,7 +35,9 @@ export const MIN_TRADE_USD = 10;
 export const AGE_CAP_DAYS = 730;
 export const TRADE_CAP = 500;
 export const VOL_CAP = 1_000_000;
-export const HOLD_CAP_DAYS = 30;
+export const HOLD_CAP_DAYS = 30; // hold time saturates at 100% here
+export const HOLD_90_DAYS = 3; // ...and reaches 90% by 3 days
+export const HOLD_STEP_DAYS = 0.1; // hold time counts in 0.1-day increments
 export const WEIGHTS = { age: 0.25, trade: 0.2, vol: 0.3, hold: 0.25 } as const;
 
 // ---- PDA seeds ----
