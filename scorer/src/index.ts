@@ -4,6 +4,7 @@ import { loadConfig } from "./config";
 import { measureWallet } from "./helius";
 import { computeScore } from "./score";
 import { loadOracleKeypair, signAttestation } from "./attest";
+import { startKeeper } from "./keeper";
 
 const config = loadConfig();
 const oracle = loadOracleKeypair();
@@ -106,3 +107,15 @@ server.listen(config.port, () => {
   console.log(`[scorer] oracle pubkey ${oracle.publicKey.toBase58()}`);
   console.log(`[scorer] cluster ${config.cluster}`);
 });
+
+// Poke keeper runs alongside the scorer to prune decayed miners.
+if (config.keeperEnabled && config.keeperSecretKey) {
+  startKeeper({
+    rpcUrl: config.keeperRpcUrl,
+    secretKey: config.keeperSecretKey,
+    intervalMs: config.keeperIntervalMs,
+    maxPerCycle: config.keeperMaxPerCycle,
+  });
+} else {
+  console.log("[keeper] disabled (set KEEPER_ENABLED=true and KEEPER_SECRET_KEY)");
+}
