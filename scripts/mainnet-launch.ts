@@ -62,8 +62,14 @@ async function postLaunchChecks(
   mintAuthPda: PublicKey,
 ): Promise<boolean> {
   console.log("\n=== sanity check ===");
+  // Re-read at finalized with a short retry — avoids a false negative from
+  // reading a lagging replica right after the write.
   let pass = true;
-  const m = await getMint(connection, mint);
+  let m = await getMint(connection, mint, "finalized");
+  for (let i = 0; i < 8 && !(m.mintAuthority?.equals(mintAuthPda) ?? false); i++) {
+    await new Promise((r) => setTimeout(r, 2000));
+    m = await getMint(connection, mint, "finalized");
+  }
   const authOk = m.mintAuthority?.equals(mintAuthPda) ?? false;
   console.log(`${authOk ? "✔" : "✖"} mint authority is the program PDA`);
   pass &&= authOk;
