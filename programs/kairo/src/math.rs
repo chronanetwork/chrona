@@ -113,6 +113,16 @@ pub fn acc_increment(d_e: u64, total_hash_rate: u64) -> u128 {
     ((d_e as u128) << 64) / (total_hash_rate as u128)
 }
 
+/// Effective hash rate after decay: `base` halved once per elapsed half-life
+/// (`base >> floor(elapsed / halflife)`), capped at a 63-bit shift.
+pub fn decayed_hash_rate(base: u64, elapsed_secs: i64, halflife_secs: i64) -> u64 {
+    if elapsed_secs <= 0 || halflife_secs <= 0 {
+        return base;
+    }
+    let k = (elapsed_secs / halflife_secs).min(63);
+    base >> (k as u32)
+}
+
 /// Pending reward for a miner, in base units: `(acc − reward_debt) · hash_rate`,
 /// de-scaled from Q64.64. Bounded by total emitted, so it never overflows in
 /// practice; `saturating_mul` is a defensive backstop.
@@ -210,6 +220,18 @@ mod tests {
         assert_eq!(cumulative_emission(u64::MAX), ASYMPTOTE_BASE);
         // A year in, still far below it (long tail remaining).
         assert!(cumulative_emission(YEAR) < ASYMPTOTE_BASE);
+    }
+
+    #[test]
+    fn hashrate_halves_every_halflife() {
+        let h = 36 * 3600;
+        assert_eq!(decayed_hash_rate(8000, 0, h), 8000);
+        assert_eq!(decayed_hash_rate(8000, h - 1, h), 8000); // not yet a full half-life
+        assert_eq!(decayed_hash_rate(8000, h, h), 4000); // 36h
+        assert_eq!(decayed_hash_rate(8000, 2 * h, h), 2000); // 72h
+        assert_eq!(decayed_hash_rate(8000, 3 * h, h), 1000);
+        assert_eq!(decayed_hash_rate(8000, 100 * h, h), 0); // long gone
+        assert_eq!(decayed_hash_rate(8000, -5, h), 8000); // clock skew → full
     }
 
     #[test]

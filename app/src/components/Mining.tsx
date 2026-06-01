@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useConnection, useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { projectedDailyKairo } from "@kairo/sdk";
+import { effectiveHashRate, projectedDailyKairo } from "@kairo/sdk";
 import { Window } from "@/components/Window";
 import {
   buildClaimTx,
   buildInitializeMinerTx,
+  buildTopOffTx,
   computeClaimableBase,
   fetchAttestation,
   fetchGlobal,
@@ -116,9 +117,29 @@ export function Mining() {
   const totalHr = global ? Number(global.totalHashRate.toString()) : 0;
   const genesis = global ? Number(global.genesisTs.toString()) : 0;
   const elapsed = genesis ? Math.floor(Date.now() / 1000) - genesis : 0;
-  const score = miner ? Number(miner.hashRate.toString()) : preview?.score ?? 0;
-  const dailyProjection = projectedDailyKairo(score, totalHr || score || 1, elapsed);
+  const baseHr = miner ? Number(miner.hashRate.toString()) : preview?.score ?? 0;
+  const lastTopup = miner ? Number(miner.lastTopupTs.toString()) : 0;
+  const effHr = miner ? effectiveHashRate(baseHr, lastTopup) : baseHr;
+  const displayScore = miner ? effHr : baseHr;
+  const dailyProjection = projectedDailyKairo(effHr, totalHr || effHr || 1, elapsed);
   const bd = preview?.breakdown;
+
+  const onTopOff = async () => {
+    if (!program || !publicKey) return;
+    setBusy(true);
+    setMsg("Approve the top-off in your wallet…");
+    try {
+      const tx = await buildTopOffTx(program, publicKey);
+      const sig = await sendTransaction(tx, connection);
+      await connection.confirmTransaction(sig, "confirmed");
+      setMsg("Topped off — hashrate restored to full.");
+      await refresh();
+    } catch (e: any) {
+      setMsg(String(e.message ?? e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   if (!publicKey) {
     return (
@@ -154,8 +175,8 @@ export function Mining() {
       )}
 
       <Window title={<>KAIRO :: SCORE{miner ? "" : " :: PREVIEW"}</>}>
-        <div className="stat-big">{previewing && !score ? "…" : fmt(score, 0)}</div>
-        <div className="stat-sub">{miner ? "your hash rate" : "your hash rate · preview"}</div>
+        <div className="stat-big">{previewing && !displayScore ? "…" : fmt(displayScore, 0)}</div>
+        <div className="stat-sub">{miner ? "effective hash rate" : "your hash rate · preview"}</div>
 
         {bd && !miner && (
           <div style={{ marginTop: 18 }}>
@@ -167,6 +188,12 @@ export function Mining() {
         )}
 
         <div style={{ marginTop: 14 }}>
+          {miner && (
+            <div className="kv">
+              <span className="k">full hash rate</span>
+              <span className="v">{fmt(baseHr, 0)}</span>
+            </div>
+          )}
           <div className="kv">
             <span className="k">projected / day</span>
             <span className="v">{fmt(dailyProjection)} KAIRO</span>
@@ -179,10 +206,21 @@ export function Mining() {
           )}
         </div>
 
-        {!miner && (
+        {!miner ? (
           <button className="btn full" style={{ marginTop: 18 }} disabled={busy} onClick={onMine}>
             {busy ? "Working…" : "Start mining · 0.1 SOL"}
           </button>
+        ) : (
+          <>
+            {effHr < baseHr && (
+              <p className="msg" style={{ marginBottom: 0 }}>
+                decayed to {fmt(effHr, 0)} of {fmt(baseHr, 0)} — halves every 36h, top off to restore
+              </p>
+            )}
+            <button className="btn full" style={{ marginTop: 14 }} disabled={busy} onClick={onTopOff}>
+              {busy ? "Working…" : "Top off · 0.02 SOL"}
+            </button>
+          </>
         )}
       </Window>
 

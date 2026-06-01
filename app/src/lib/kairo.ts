@@ -121,6 +121,20 @@ export async function buildInitializeMinerTx(
   return new Transaction().add(edIx).add(ix);
 }
 
+export async function buildTopOffTx(program: Program, owner: PublicKey): Promise<Transaction> {
+  const ix = await program.methods
+    .topOff()
+    .accountsPartial({
+      owner,
+      global: globalPda()[0],
+      miner: minerPda(owner)[0],
+      treasury: (await fetchGlobal(program)).treasury,
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
+  return new Transaction().add(ix);
+}
+
 export async function buildClaimTx(program: Program, owner: PublicKey): Promise<Transaction> {
   const ata = await getAssociatedTokenAddress(MINT, owner);
   const ix = await program.methods

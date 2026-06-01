@@ -248,6 +248,47 @@ describe("kairo", () => {
     assert.isTrue(acct.amount > 0n, "should have minted some KAIRO");
   });
 
+  it("top off charges the fee and restores hashrate to full", async () => {
+    const user = Keypair.generate();
+    await fund(user.publicKey, 1);
+    await initMiner(user, 4000);
+    const before = await connection.getBalance(treasury.publicKey);
+
+    await program.methods
+      .topOff()
+      .accountsPartial({
+        owner: user.publicKey,
+        global: globalPda,
+        miner: minerPda(user.publicKey),
+        treasury: treasury.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([user])
+      .rpc();
+
+    const after = await connection.getBalance(treasury.publicKey);
+    assert.equal(after - before, 0.02 * LAMPORTS_PER_SOL);
+    const m = await program.account.miner.fetch(minerPda(user.publicKey));
+    assert.equal(m.effectiveHashRate.toString(), "4000");
+  });
+
+  it("poke runs permissionlessly", async () => {
+    const user = Keypair.generate();
+    await fund(user.publicKey, 1);
+    await initMiner(user, 3000);
+    // authority (provider wallet) pokes someone else's miner
+    await program.methods
+      .poke()
+      .accountsPartial({
+        poker: authority.publicKey,
+        global: globalPda,
+        miner: minerPda(user.publicKey),
+      })
+      .rpc();
+    const m = await program.account.miner.fetch(minerPda(user.publicKey));
+    assert.equal(m.effectiveHashRate.toString(), "3000"); // no time passed → still full
+  });
+
   it("re-attest changes hash rate and total", async () => {
     const user = Keypair.generate();
     await fund(user.publicKey, 1);

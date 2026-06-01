@@ -27,6 +27,10 @@ export const EMISSION_BASE_KAIRO = 20_852_948.054543;
 export const EMISSION_BASE_H_SECONDS = 250_560_000;
 /** Initialization fee, lamports (0.1 SOL). */
 export const INIT_FEE_LAMPORTS = 100_000_000n;
+/** Top-off fee to restore hashrate to full, lamports (0.02 SOL). */
+export const TOPOFF_FEE_LAMPORTS = 20_000_000n;
+/** Hashrate half-life: effective rate halves every 36h until you top off. */
+export const HASHRATE_HALFLIFE_SECONDS = 36 * 3600;
 
 // ---- scoring (see docs/scoring-spec.md) ----
 export const MIN_SCORE = 100;
@@ -41,6 +45,6 @@ export const HOLD_STEP_DAYS = 0.1; // hold time counts in 0.1-day increments
 export const WEIGHTS = { age: 0.25, trade: 0.2, vol: 0.3, hold: 0.25 } as const;
 
 // ---- PDA seeds ----
-export const GLOBAL_SEED = Buffer.from("global");
-export const MINER_SEED = Buffer.from("miner");
+export const GLOBAL_SEED = Buffer.from("global-v2");
+export const MINER_SEED = Buffer.from("miner-v2");
 export const MINT_AUTH_SEED = Buffer.from("mint_auth");

@@ -73,6 +73,8 @@ The emission integral `E(t)` and the fixed-point `2^(−x)` it needs live in `pr
 | `set_mint_authority` | deployer | CPI `SetAuthority` → mint authority becomes the program PDA; record `premine_observed`, set `active = true`, start genesis clock. |
 | `initialize_miner` | user | Verify oracle attestation, charge 0.1 SOL → treasury, join the pool. |
 | `re_attest` | miner | Settle, then swap to a fresh (higher/lower) score. |
+| `top_off` | miner | Pay the top-off fee to reset effective hashrate to full (resets the 36h halving clock). |
+| `poke` | anyone | Permissionlessly settle + decay a miner, pruning abandoned wallets from the pool. |
 | `claim` | miner | Settle, mint accrued KAIRO to the miner via PDA. |
 | `admin` | authority | `set_oracle_pubkey`, `set_params`, `pause`/`unpause`, `withdraw_treasury`. |
 

@@ -55,10 +55,10 @@ async function main() {
   const program = new Program(idl, provider);
   const pid = program.programId;
 
-  const [globalPda] = PublicKey.findProgramAddressSync([Buffer.from("global")], pid);
+  const [globalPda] = PublicKey.findProgramAddressSync([Buffer.from("global-v2")], pid);
   const [mintAuthPda] = PublicKey.findProgramAddressSync([Buffer.from("mint_auth")], pid);
   const [minerPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("miner"), miner.publicKey.toBuffer()],
+    [Buffer.from("miner-v2"), miner.publicKey.toBuffer()],
     pid,
   );
 

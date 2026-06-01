@@ -57,6 +57,16 @@ pub mod kairo {
         instructions::re_attest::handler(ctx, score, expiry, nonce)
     }
 
+    /// Restore the caller's hash rate to full for the top-off fee.
+    pub fn top_off(ctx: Context<TopOff>) -> Result<()> {
+        instructions::top_off::handler(ctx)
+    }
+
+    /// Permissionlessly settle + decay any miner (prunes abandoned wallets).
+    pub fn poke(ctx: Context<Poke>) -> Result<()> {
+        instructions::poke::handler(ctx)
+    }
+
     /// Mint accrued rewards to the calling miner.
     pub fn claim(ctx: Context<Claim>) -> Result<()> {
         instructions::claim::handler(ctx)

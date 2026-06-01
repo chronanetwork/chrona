@@ -68,6 +68,7 @@ pub fn handler(ctx: Context<InitializeGlobal>, params: InitializeGlobalParams) -
     g.premine_observed = 0;
 
     g.init_fee_lamports = params.init_fee_lamports;
+    g.topoff_fee_lamports = crate::constants::TOPOFF_FEE_LAMPORTS;
     g.min_score = params.min_score;
     g.max_score = params.max_score;
     g.attestation_validity_secs = params.attestation_validity_secs;

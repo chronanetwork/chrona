@@ -34,6 +34,8 @@ pub struct GlobalState {
 
     /// One-time initialization fee, lamports.
     pub init_fee_lamports: u64,
+    /// Fee to restore hash rate to full, lamports.
+    pub topoff_fee_lamports: u64,
     /// Minimum acceptable score (hash rate).
     pub min_score: u64,
     /// Maximum acceptable score (hash rate).
@@ -91,8 +93,13 @@ impl GlobalState {
 #[derive(InitSpace)]
 pub struct Miner {
     pub owner: Pubkey,
-    /// This wallet's hash rate (= attested score snapshot).
+    /// Full (attested) hash rate — the value restored by a top-off.
     pub hash_rate: u64,
+    /// Hash rate currently counted in the pool (`hash_rate` decayed by halvings);
+    /// kept in sync with `GlobalState.total_hash_rate`.
+    pub effective_hash_rate: u64,
+    /// Last time the miner topped off (resets the halving clock).
+    pub last_topup_ts: i64,
     /// `acc_reward_per_hash` checkpoint at last settle, Q64.64.
     pub reward_debt: u128,
     /// Settled-but-unclaimed rewards, base units.
@@ -107,12 +114,37 @@ pub struct Miner {
 }
 
 impl Miner {
-    /// Credit rewards accrued since the last settle into `accrued_base`, and
-    /// advance the miner's `reward_debt` checkpoint to the current accumulator.
-    /// Call before any change to `hash_rate` and before paying out a claim.
+    /// Effective hash rate at `now`: full rate halved once per elapsed half-life
+    /// since the last top-off (`base >> floor(elapsed / HALFLIFE)`).
+    pub fn current_effective(&self, now_ts: i64) -> u64 {
+        let elapsed = now_ts.saturating_sub(self.last_topup_ts);
+        math::decayed_hash_rate(self.hash_rate, elapsed, crate::constants::HASHRATE_HALFLIFE_SECONDS)
+    }
+
+    /// Credit rewards accrued (at the current effective rate) into `accrued_base`
+    /// and advance the `reward_debt` checkpoint. Call before any rate change.
     pub fn settle(&mut self, acc_reward_per_hash: u128) {
-        let pending = math::pending_reward(acc_reward_per_hash, self.reward_debt, self.hash_rate);
+        let pending =
+            math::pending_reward(acc_reward_per_hash, self.reward_debt, self.effective_hash_rate);
         self.accrued_base = self.accrued_base.saturating_add(pending);
         self.reward_debt = acc_reward_per_hash;
     }
+}
+
+/// Settle a miner against the pool, then re-apply hashrate decay: recompute the
+/// miner's effective rate at `now` and adjust the pool total by the difference.
+/// Used by claim and poke. Returns nothing; both accounts are mutated in place.
+pub fn settle_and_decay(global: &mut GlobalState, miner: &mut Miner, now_ts: i64) -> Result<()> {
+    global.update_pool(now_ts)?;
+    miner.settle(global.acc_reward_per_hash);
+    let new_eff = miner.current_effective(now_ts);
+    if new_eff != miner.effective_hash_rate {
+        global.total_hash_rate = global
+            .total_hash_rate
+            .checked_sub(miner.effective_hash_rate)
+            .and_then(|t| t.checked_add(new_eff))
+            .ok_or(KairoError::MathOverflow)?;
+        miner.effective_hash_rate = new_eff;
+    }
+    Ok(())
 }

@@ -121,19 +121,27 @@ export default function DocsPage() {
             <h2>How mining works</h2>
             <div className="prose">
               <p>
-                Once you&apos;re in, you mine continuously — there&apos;s nothing to keep open, no
-                process to run. The on-chain program tracks everyone&apos;s hashrate and credits your
-                share every moment, using the same accumulator pattern staking contracts use (so it
-                costs the same whether there are 10 miners or 10,000).
+                Once you&apos;re in, you mine continuously — nothing to keep open, no process to
+                run. The program tracks everyone&apos;s hashrate and credits your share every
+                moment, using the same accumulator pattern staking contracts use (so it costs the
+                same whether there are 10 miners or 10,000).
               </p>
               <p>
-                Your rewards pile up on-chain until you decide to <strong>claim</strong>. Claiming
-                mints the $KAIRO straight to your wallet — do it whenever, as often or as rarely as
-                you like. Nothing expires.
+                But mining isn&apos;t set-and-forget. Your hashrate <strong>halves every 36 hours</strong> —
+                so to keep earning at full power you <strong>top off</strong> (a small 0.02 SOL fee)
+                to reset it to your full score. Let it slide and you simply mine less; top off and
+                you&apos;re back to 100%. It keeps Kairo for people who actually stick around, and
+                lets abandoned wallets fade out instead of diluting everyone forever.
+              </p>
+              <p>
+                Your rewards pile up on-chain until you <strong>claim</strong> — mints the $KAIRO
+                straight to your wallet, whenever you like. Accrued rewards never expire; only your
+                hashrate decays.
               </p>
               <p className="small">
-                Starting costs a one-time <strong>0.1 SOL</strong> initialization fee that goes to
-                the treasury. That&apos;s the only payment — there are no recurring costs.
+                Costs: a one-time <strong>0.1 SOL</strong> entry fee, then <strong>0.02 SOL</strong>
+                per top-off to stay at full hashrate. Anyone can also &ldquo;poke&rdquo; a dormant
+                miner to apply its decay — that&apos;s how ghosts get pruned from the pool.
               </p>
             </div>
           </section>
@@ -198,16 +206,18 @@ export default function DocsPage() {
                 so being extremely active doesn&apos;t push the number much higher.
               </p>
 
-              <p className="lead-q">Can my score go down after I start?</p>
+              <p className="lead-q">Does my hashrate really halve every 36 hours?</p>
               <p>
-                No — it&apos;s a snapshot taken when you join. You can voluntarily re-check later if
-                your activity improves, but it never decays on its own.
+                Yes — your effective hashrate halves every 36h until you top off (0.02 SOL), which
+                resets it to your full score. Your base score itself doesn&apos;t change; only the
+                effective rate decays. It&apos;s what keeps mining tied to staying active.
               </p>
 
-              <p className="lead-q">What&apos;s the catch with the 0.1 SOL?</p>
+              <p className="lead-q">What does it cost to mine?</p>
               <p>
-                It&apos;s a one-time anti-spam fee to the treasury — it keeps bots from farming
-                thousands of throwaway wallets. There&apos;s nothing recurring.
+                A one-time <strong>0.1 SOL</strong> to start (anti-spam), then <strong>0.02 SOL</strong>
+                per top-off whenever you want to restore full hashrate. Skip top-offs and you just
+                earn less — you&apos;re never forced to pay.
               </p>
 
               <p className="lead-q">Is this live on mainnet?</p>

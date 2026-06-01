@@ -30,25 +30,30 @@ pub struct SetMintAuthority<'info> {
 
 pub fn handler(ctx: Context<SetMintAuthority>) -> Result<()> {
     let global = &ctx.accounts.global;
+    use anchor_lang::solana_program::program_option::COption;
     require!(!global.active, KairoError::AlreadyActive);
-    require!(
-        ctx.accounts.mint.mint_authority == anchor_lang::solana_program::program_option::COption::Some(ctx.accounts.authority.key()),
-        KairoError::MintAuthorityNotProgram
-    );
 
-    // CPI: SetAuthority(MintTokens) -> program PDA. Signed by current authority.
-    let cpi_ctx = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
-        SetAuthority {
-            account_or_mint: ctx.accounts.mint.to_account_info(),
-            current_authority: ctx.accounts.authority.to_account_info(),
-        },
-    );
-    token::set_authority(
-        cpi_ctx,
-        AuthorityType::MintTokens,
-        Some(ctx.accounts.mint_authority.key()),
-    )?;
+    let pda = ctx.accounts.mint_authority.key();
+    let already_pda = ctx.accounts.mint.mint_authority == COption::Some(pda);
+
+    if !already_pda {
+        // Deployer must currently hold mint authority to hand it over.
+        require!(
+            ctx.accounts.mint.mint_authority == COption::Some(ctx.accounts.authority.key()),
+            KairoError::MintAuthorityNotProgram
+        );
+        // CPI: SetAuthority(MintTokens) -> program PDA, signed by current authority.
+        let cpi_ctx = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            SetAuthority {
+                account_or_mint: ctx.accounts.mint.to_account_info(),
+                current_authority: ctx.accounts.authority.to_account_info(),
+            },
+        );
+        token::set_authority(cpi_ctx, AuthorityType::MintTokens, Some(pda))?;
+    }
+    // If the PDA already holds authority (e.g. re-bootstrapping a fresh global),
+    // skip the CPI and just activate.
 
     let now = Clock::get()?.unix_timestamp;
     let global = &mut ctx.accounts.global;

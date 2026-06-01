@@ -38,12 +38,21 @@ pub const BASE_H_SECONDS: u64 = 250_560_000;
 /// One-time mining initialization fee, in lamports (0.1 SOL).
 pub const INIT_FEE_LAMPORTS: u64 = 100_000_000;
 
+/// Top-off fee to restore hashrate to full, in lamports (0.02 SOL).
+pub const TOPOFF_FEE_LAMPORTS: u64 = 20_000_000;
+
+/// Hashrate half-life, in seconds (36 hours). Effective hashrate is
+/// `base >> floor((now - last_topup) / HALFLIFE)` — it halves every 36h until
+/// the miner tops off.
+pub const HASHRATE_HALFLIFE_SECONDS: i64 = 36 * 3600;
+
 /// Default hash-rate (score) bounds, matching the scoring spec (`MIN_HR`/`MAX_HR`).
 /// A fresh wallet floors at `MIN_SCORE`; the best wallets cap at `MAX_SCORE`.
 pub const MIN_SCORE: u64 = 100;
 pub const MAX_SCORE: u64 = 10_000;
 
 // ---- PDA seeds ----
-pub const GLOBAL_SEED: &[u8] = b"global";
-pub const MINER_SEED: &[u8] = b"miner";
+// global/miner bumped to v2 with the decaying-hashrate account layout.
+pub const GLOBAL_SEED: &[u8] = b"global-v2";
+pub const MINER_SEED: &[u8] = b"miner-v2";
 pub const MINT_AUTH_SEED: &[u8] = b"mint_auth";

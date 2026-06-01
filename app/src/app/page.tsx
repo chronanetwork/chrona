@@ -71,8 +71,8 @@ export default function Home() {
             <div className="step">
               <h3>Mine $KAIRO</h3>
               <p>
-                Pay a one-time 0.1 SOL init and mine continuously, sharing every block by your
-                portion of total hashrate. Claim to your wallet anytime.
+                Pay 0.1 SOL to start, then mine continuously, sharing every block by your hashrate.
+                It halves every 36h — top off (0.02 SOL) to stay at full. Claim anytime.
               </p>
             </div>
           </Window>

@@ -82,6 +82,8 @@ pub fn handler(ctx: Context<InitializeMiner>, score: u64, expiry: i64, nonce: [u
     let miner = &mut ctx.accounts.miner;
     miner.owner = owner_key;
     miner.hash_rate = score;
+    miner.effective_hash_rate = score; // full at join (just topped off)
+    miner.last_topup_ts = now;
     miner.reward_debt = acc;
     miner.accrued_base = 0;
     miner.joined_ts = now;

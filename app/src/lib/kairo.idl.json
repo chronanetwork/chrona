@@ -52,7 +52,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -70,7 +73,10 @@
                   105,
                   110,
                   101,
-                  114
+                  114,
+                  45,
+                  118,
+                  50
                 ]
               },
               {
@@ -248,7 +254,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -312,7 +321,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -330,7 +342,10 @@
                   105,
                   110,
                   101,
-                  114
+                  114,
+                  45,
+                  118,
+                  50
                 ]
               },
               {
@@ -380,6 +395,77 @@
       ]
     },
     {
+      "name": "poke",
+      "docs": [
+        "Permissionlessly settle + decay any miner (prunes abandoned wallets)."
+      ],
+      "discriminator": [
+        46,
+        24,
+        16,
+        107,
+        212,
+        9,
+        17,
+        5
+      ],
+      "accounts": [
+        {
+          "name": "poker",
+          "signer": true
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  45,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "miner",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  101,
+                  114,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "miner.owner",
+                "account": "Miner"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "re_attest",
       "docs": [
         "Refresh the caller's score with a new attestation."
@@ -415,7 +501,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -433,7 +522,10 @@
                   105,
                   110,
                   101,
-                  114
+                  114,
+                  45,
+                  118,
+                  50
                 ]
               },
               {
@@ -503,7 +595,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -577,7 +672,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -624,7 +722,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -683,7 +784,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -730,7 +834,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -743,6 +850,91 @@
           "type": "pubkey"
         }
       ]
+    },
+    {
+      "name": "top_off",
+      "docs": [
+        "Restore the caller's hash rate to full for the top-off fee."
+      ],
+      "discriminator": [
+        176,
+        147,
+        121,
+        28,
+        228,
+        247,
+        141,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "miner"
+          ]
+        },
+        {
+          "name": "global",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  45,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "miner",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  101,
+                  114,
+                  45,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "relations": [
+            "global"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "transfer_authority",
@@ -777,7 +969,10 @@
                   111,
                   98,
                   97,
-                  108
+                  108,
+                  45,
+                  118,
+                  50
                 ]
               }
             ]
@@ -981,6 +1176,13 @@
             "type": "u64"
           },
           {
+            "name": "topoff_fee_lamports",
+            "docs": [
+              "Fee to restore hash rate to full, lamports."
+            ],
+            "type": "u64"
+          },
+          {
             "name": "min_score",
             "docs": [
               "Minimum acceptable score (hash rate)."
@@ -1077,9 +1279,24 @@
           {
             "name": "hash_rate",
             "docs": [
-              "This wallet's hash rate (= attested score snapshot)."
+              "Full (attested) hash rate — the value restored by a top-off."
             ],
             "type": "u64"
+          },
+          {
+            "name": "effective_hash_rate",
+            "docs": [
+              "Hash rate currently counted in the pool (`hash_rate` decayed by halvings);",
+              "kept in sync with `GlobalState.total_hash_rate`."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_topup_ts",
+            "docs": [
+              "Last time the miner topped off (resets the halving clock)."
+            ],
+            "type": "i64"
           },
           {
             "name": "reward_debt",

@@ -46,15 +46,16 @@ pub struct Claim<'info> {
 pub fn handler(ctx: Context<Claim>) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
 
-    let global = &mut ctx.accounts.global;
-    require!(!global.paused, KairoError::Paused);
-    require!(global.active, KairoError::NotActive);
-    global.update_pool(now)?;
-    let acc = global.acc_reward_per_hash;
-    let mint_auth_bump = global.mint_auth_bump;
+    {
+        let global = &ctx.accounts.global;
+        require!(!global.paused, KairoError::Paused);
+        require!(global.active, KairoError::NotActive);
+    }
+    // Settle rewards and apply hashrate decay in one step.
+    crate::state::settle_and_decay(&mut ctx.accounts.global, &mut ctx.accounts.miner, now)?;
+    let mint_auth_bump = ctx.accounts.global.mint_auth_bump;
 
     let miner = &mut ctx.accounts.miner;
-    miner.settle(acc);
     let amount = miner.accrued_base;
     require!(amount > 0, KairoError::NothingToClaim);
     miner.accrued_base = 0;

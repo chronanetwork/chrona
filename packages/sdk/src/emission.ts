@@ -4,7 +4,24 @@ import {
   EMISSION_BASE_KAIRO,
   EMISSION_SPIKE_H_SECONDS,
   EMISSION_SPIKE_KAIRO,
+  HASHRATE_HALFLIFE_SECONDS,
 } from "./constants";
+
+/**
+ * Effective hashrate after decay: full rate halved once per elapsed half-life
+ * since the last top-off (`base >> floor(elapsed / halflife)`). Mirrors the
+ * on-chain `math::decayed_hash_rate`.
+ */
+export function effectiveHashRate(
+  base: number,
+  lastTopupTs: number,
+  nowSecs: number = Math.floor(Date.now() / 1000),
+): number {
+  const elapsed = nowSecs - lastTopupTs;
+  if (elapsed <= 0) return base;
+  const k = Math.min(63, Math.floor(elapsed / HASHRATE_HALFLIFE_SECONDS));
+  return Math.floor(base / 2 ** k);
+}
 
 /**
  * Cumulative emission to the whole network, in whole KAIRO, `elapsed` seconds

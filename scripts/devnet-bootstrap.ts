@@ -64,7 +64,7 @@ async function main() {
   const program = new Program(idl, provider);
   const programId = program.programId;
 
-  const [globalPda] = PublicKey.findProgramAddressSync([Buffer.from("global")], programId);
+  const [globalPda] = PublicKey.findProgramAddressSync([Buffer.from("global-v2")], programId);
   const [mintAuthPda] = PublicKey.findProgramAddressSync([Buffer.from("mint_auth")], programId);
 
   console.log("deployer:", deployer.publicKey.toBase58());

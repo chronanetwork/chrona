@@ -54,21 +54,22 @@ pub fn handler(ctx: Context<ReAttest>, score: u64, expiry: i64, nonce: [u8; 32])
     let acc = global.acc_reward_per_hash;
 
     let miner = &mut ctx.accounts.miner;
-    let old = miner.hash_rate;
-    miner.settle(acc); // credits rewards at the old hash rate, checkpoints reward_debt
+    let old_base = miner.hash_rate;
+    let old_eff = miner.effective_hash_rate;
+    miner.settle(acc); // credit rewards at the old effective rate
 
-    // total_hash_rate += new - old
+    // New base score; effective re-derived from the existing top-off clock.
+    miner.hash_rate = score;
+    let new_eff = miner.current_effective(now);
     global.total_hash_rate = global
         .total_hash_rate
-        .checked_sub(old)
-        .ok_or(KairoError::MathOverflow)?
-        .checked_add(score)
+        .checked_sub(old_eff)
+        .and_then(|t| t.checked_add(new_eff))
         .ok_or(KairoError::MathOverflow)?;
-
-    miner.hash_rate = score;
+    miner.effective_hash_rate = new_eff;
     miner.attestation_expiry = expiry;
     miner.score_nonce = nonce;
 
-    msg!("kairo: miner {} re-attested {} -> {}", owner_key, old, score);
+    msg!("kairo: miner {} re-attested {} -> {}", owner_key, old_base, score);
     Ok(())
 }
