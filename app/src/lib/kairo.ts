@@ -74,30 +74,19 @@ export async function fetchPrices(): Promise<MarketPrices> {
   return res.json();
 }
 
-export interface NetworkStats {
+export interface LiveStats extends MarketPrices {
   active: boolean;
   totalHashRate: number;
-  genesisTs: number;
   miners: number;
   minedKairo: number;
+  genesisTs: number;
 }
 
-/** On-chain network stats: pool hashrate, miner count, KAIRO mined so far. */
-export async function fetchNetworkStats(program: Program): Promise<NetworkStats> {
-  const { cumulativeEmissionKairo } = await import("@kairo/sdk");
-  const g: any = await fetchGlobal(program).catch(() => null);
-  if (!g) return { active: false, totalHashRate: 0, genesisTs: 0, miners: 0, minedKairo: 0 };
-  const minerClient: any = (program.account as any).miner;
-  const miners: any[] = await minerClient.all([{ dataSize: minerClient.size }]).catch(() => []);
-  const genesisTs = Number(g.genesisTs.toString());
-  const elapsed = genesisTs ? Math.max(0, Math.floor(Date.now() / 1000) - genesisTs) : 0;
-  return {
-    active: g.active,
-    totalHashRate: Number(g.totalHashRate.toString()),
-    genesisTs,
-    miners: miners.length,
-    minedKairo: g.active ? cumulativeEmissionKairo(elapsed) : 0,
-  };
+/** Combined live stats (price + on-chain network) from the scorer, cached server-side. */
+export async function fetchStats(): Promise<LiveStats> {
+  const res = await fetch(`${SCORER_URL}/stats`, { signal: AbortSignal.timeout(10_000) });
+  if (!res.ok) throw new Error(`stats: ${res.status}`);
+  return res.json();
 }
 
 /** Preview a wallet's score (no signature). */

@@ -6,6 +6,7 @@ import { computeScore } from "./score";
 import { loadOracleKeypair, signAttestation } from "./attest";
 import { startKeeper } from "./keeper";
 import { getMarketPrices } from "./marketPrice";
+import { getNetworkStats } from "./networkStats";
 
 const config = loadConfig();
 const oracle = loadOracleKeypair();
@@ -58,6 +59,15 @@ const server = createServer(async (req, res) => {
     // Live $KAIRO + SOL prices (Jupiter, proxied so the key stays server-side).
     if (url.pathname === "/price") {
       return json(res, 200, await getMarketPrices(config.jupApiKey));
+    }
+
+    // Combined live stats for the hero: price + on-chain network stats (cached).
+    if (url.pathname === "/stats") {
+      const [prices, net] = await Promise.all([
+        getMarketPrices(config.jupApiKey),
+        getNetworkStats(config.keeperRpcUrl),
+      ]);
+      return json(res, 200, { ...prices, ...net });
     }
 
     // GET /score/:wallet  → free preview (no signature)
