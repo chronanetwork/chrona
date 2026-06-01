@@ -55,6 +55,16 @@ The program is **deployed and formally verified on mainnet** — the on-chain by
 
 Mining opens once the $KAIRO mint authority is handed to the program at token launch.
 
+## On-chain addresses
+
+| | Address |
+|---|---|
+| Program | `6MS8n87aRsXE5RjyVXuf9wcfARn5ut4m2YhBFE3kairo` |
+| $KAIRO token (mint) | `HEZhbPyEoCNtEuiJh7hLuG8uuyiceUp2yduCVFKkairo` |
+| Treasury | `B1xtqSHWRaGMpPkfgkFYPsLkvQKzF7pLUckTF53kairo` |
+
+*The treasury is currently the deploy/upgrade authority; it receives the 0.1 SOL init and 0.02 SOL top-off fees.*
+
 ## Dig deeper
 
 | | |
