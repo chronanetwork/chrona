@@ -210,17 +210,19 @@ export function Mining() {
           <button className="btn full" style={{ marginTop: 18 }} disabled={busy} onClick={onMine}>
             {busy ? "Working…" : "Start mining · 0.1 SOL"}
           </button>
-        ) : (
+        ) : effHr < baseHr ? (
           <>
-            {effHr < baseHr && (
-              <p className="msg" style={{ marginBottom: 0 }}>
-                decayed to {fmt(effHr, 0)} of {fmt(baseHr, 0)} — halves every 36h, top off to restore
-              </p>
-            )}
+            <p className="msg" style={{ marginBottom: 0 }}>
+              decayed to {fmt(effHr, 0)} of {fmt(baseHr, 0)} — halves every 36h
+            </p>
             <button className="btn full" style={{ marginTop: 14 }} disabled={busy} onClick={onTopOff}>
               {busy ? "Working…" : "Top off · 0.02 SOL"}
             </button>
           </>
+        ) : (
+          <p className="msg" style={{ marginTop: 16, marginBottom: 0 }}>
+            ◆ at full hashrate — halves 36h after your last top-off
+          </p>
         )}
       </Window>
 
