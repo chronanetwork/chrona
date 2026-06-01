@@ -26,6 +26,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { execSync } from "node:child_process";
 import * as anchor from "@coral-xyz/anchor";
 import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { getMint, TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -50,6 +51,62 @@ const load = (n: string): Keypair =>
 function fail(msg: string): never {
   console.error(`\n✖ ${msg}\n`);
   process.exit(1);
+}
+
+/** Read-back checks after launch — confirm the handover actually took. */
+async function postLaunchChecks(
+  connection: Connection,
+  program: any,
+  globalPda: PublicKey,
+  mint: PublicKey,
+  mintAuthPda: PublicKey,
+): Promise<boolean> {
+  console.log("\n=== sanity check ===");
+  let pass = true;
+  const m = await getMint(connection, mint);
+  const authOk = m.mintAuthority?.equals(mintAuthPda) ?? false;
+  console.log(`${authOk ? "✔" : "✖"} mint authority is the program PDA`);
+  pass &&= authOk;
+  const g: any = await program.account.globalState.fetch(globalPda);
+  console.log(`${g.active ? "✔" : "✖"} mining active`);
+  pass &&= g.active;
+  const genOk = g.genesisTs.toNumber() > 0;
+  console.log(`${genOk ? "✔" : "✖"} genesis_ts set (${g.genesisTs.toString()})`);
+  pass &&= genOk;
+  const supplyOk = Number(g.premineObserved) === Number(m.supply);
+  console.log(
+    `${supplyOk ? "✔" : "⚠"} premine_observed (${Number(g.premineObserved) / 1e6}) == supply (${Number(m.supply) / 1e6})`,
+  );
+  console.log(pass ? "\n✓ all checks passed — mining is LIVE" : "\n✖ checks FAILED — investigate before announcing");
+  return pass;
+}
+
+/** Point the scorer's poke keeper at mainnet and restart it (best-effort, local). */
+function repointKeeper(rpc: string): void {
+  console.log("\n=== repoint keeper → mainnet ===");
+  const envPath = path.join(__dirname, "..", "scorer", ".env.production");
+  if (!fs.existsSync(envPath)) {
+    console.log("  scorer/.env.production not found here — on the scorer host, set");
+    console.log(`  KEEPER_RPC_URL=${rpc.split("?")[0]}?... and run: sudo systemctl restart kairo-scorer`);
+    return;
+  }
+  let env = fs.readFileSync(envPath, "utf8");
+  env = /^KEEPER_RPC_URL=/m.test(env)
+    ? env.replace(/^KEEPER_RPC_URL=.*$/m, `KEEPER_RPC_URL=${rpc}`)
+    : `${env.trimEnd()}\nKEEPER_RPC_URL=${rpc}\n`;
+  if (!/^KEEPER_ENABLED=true/m.test(env)) {
+    env = /^KEEPER_ENABLED=/m.test(env)
+      ? env.replace(/^KEEPER_ENABLED=.*$/m, "KEEPER_ENABLED=true")
+      : `${env.trimEnd()}\nKEEPER_ENABLED=true\n`;
+  }
+  fs.writeFileSync(envPath, env);
+  console.log("  ✔ KEEPER_RPC_URL → mainnet in scorer/.env.production");
+  try {
+    execSync("sudo systemctl restart kairo-scorer", { stdio: "ignore" });
+    console.log("  ✔ restarted kairo-scorer (keeper now pruning mainnet miners)");
+  } catch {
+    console.log("  ⚠ updated env but couldn't restart — run: sudo systemctl restart kairo-scorer");
+  }
 }
 
 async function main() {
@@ -158,12 +215,12 @@ async function main() {
     .rpc();
   console.log("  ✔ mint authority handed to program; mining ACTIVE");
 
-  const final: any = await program.account.globalState.fetch(globalPda);
+  // post-launch sanity check + repoint the keeper at mainnet
+  await postLaunchChecks(connection, program, globalPda, mint, mintAuthPda);
+  repointKeeper(RPC);
+
   console.log("\n=== LAUNCHED ===");
-  console.log("active:           ", final.active);
-  console.log("genesis_ts:       ", final.genesisTs.toString());
-  console.log("premine_observed: ", Number(final.premineObserved) / 1e6, "KAIRO");
-  console.log("\nNext: point the scorer + keeper at mainnet and the dapp's Start-mining button unlocks automatically.");
+  console.log("The dapp's Start-mining button unlocks automatically on its next poll.");
 }
 
 main().catch((e) => {
