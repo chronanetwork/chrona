@@ -27,6 +27,7 @@ export default function DocsPage() {
           <a href="#emission">The emission curve</a>
           <a href="#mining">How mining works</a>
           <a href="#token">The $KAIRO token</a>
+          <a href="#flywheel">Buyback &amp; burn</a>
           <a href="#safe">Is it safe?</a>
           <a href="#faq">FAQ</a>
         </nav>
@@ -164,8 +165,38 @@ export default function DocsPage() {
             </div>
           </section>
 
+          <section className="doc-section" id="flywheel">
+            <span className="kicker">06 — flywheel</span>
+            <h2>The buyback &amp; burn flywheel</h2>
+            <div className="prose">
+              <p>
+                Mining isn&apos;t free. Starting a rig costs 0.1 SOL, and keeping your hashrate at
+                full costs a 0.02 SOL top-off every so often. Those fees don&apos;t just disappear —
+                they pool in the treasury and get put to work.
+              </p>
+              <p>
+                On a schedule, an automated keeper checks the treasury balance. A fixed reserve
+                always stays put. Anything above that is split in two: half funds operations, and
+                the other half is used to <strong>buy $KAIRO back off the open market</strong>
+                {" "}(through Jupiter) and immediately <strong>burn it</strong> — gone, supply
+                permanently reduced.
+              </p>
+              <p>
+                So the more the network is used, the more fees accumulate, the more $KAIRO gets
+                bought and burned. Activity on the chain becomes constant, structural deflation on
+                the token. That&apos;s the flywheel: usage → fees → buybacks → burns → tighter
+                supply.
+              </p>
+              <p className="small">
+                Every buyback and burn is on-chain and verifiable. The running totals — SOL spent
+                buying back and $KAIRO destroyed — are shown live on the{" "}
+                <Link href="/#buyback">home page</Link>.
+              </p>
+            </div>
+          </section>
+
           <section className="doc-section" id="safe">
-            <span className="kicker">06 — safety</span>
+            <span className="kicker">07 — safety</span>
             <h2>Is it safe to connect?</h2>
             <div className="prose">
               <p>
@@ -193,7 +224,7 @@ export default function DocsPage() {
           </section>
 
           <section className="doc-section" id="faq">
-            <span className="kicker">07 — faq</span>
+            <span className="kicker">08 — faq</span>
             <h2>FAQ</h2>
             <div className="prose">
               <p className="lead-q">Do I have to keep my computer on to mine?</p>

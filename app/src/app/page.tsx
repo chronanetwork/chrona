@@ -99,11 +99,13 @@ export default function Home() {
       {/* Buyback & burn */}
       <section className="container section" id="buyback">
         <div className="section-head">
-          <span className="eyebrow">Fees at work</span>
+          <span className="eyebrow">The deflation flywheel</span>
           <h2>Buyback &amp; burn</h2>
           <p>
-            SOL the dev wallet has spent buying $KAIRO back off the market, and the supply it has
-            permanently burned. Counted straight from on-chain history.
+            Mining fees don&apos;t sit idle. Above a fixed reserve, the treasury automatically buys
+            $KAIRO back off the market and burns it — so network activity turns into a permanently
+            shrinking supply. Totals below are counted straight from on-chain history.{" "}
+            <Link href="/docs#flywheel">How the flywheel works →</Link>
           </p>
         </div>
         <Window title="BUYBACK :: BURN" bodyStyle={{ padding: 0 }}>

@@ -13,6 +13,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
     "@kairo/sdk": "*",
+    "@solana/spl-token": "^0.4.0",
     "@solana/web3.js": "^1.95.0",
     "bs58": "^5.0.0",
     "tweetnacl": "^1.0.3"

@@ -56,3 +56,16 @@ The program never loops over blocks. The reward injected into the pool between t
 - **Devnet:** the premine is minted directly to the deployer; no DBC.
 
 After launch, mint authority is transferred to a program PDA — from then on, the only new KAIRO that can ever exist is mined.
+
+## Buyback & burn flywheel
+
+Mining is fee-funded: 0.1 SOL to initialize a miner and 0.02 SOL per hashrate top-off. Those fees accumulate in the treasury, and a scheduled keeper recycles them into deflation:
+
+- Every cycle (default 5 min) it reads the treasury SOL balance.
+- A fixed **reserve** (default 10 SOL) is always retained for operations and fees.
+- Of the **excess** above the trigger (default 11 SOL), **half** is sent to the operations wallet and **half** buys $KAIRO on the open market via Jupiter (`ExactIn`, slippage-bounded).
+- The $KAIRO bought in that swap is **burned immediately** (SPL `Burn`), permanently removing it from supply.
+
+The result is a flywheel: **network usage → fees → buybacks → burns → tighter supply**. Mining 20M new $KAIRO into circulation is offset over time by burns funded entirely by demand to mine. Every buyback and burn is an on-chain transaction; cumulative SOL spent and $KAIRO destroyed are tracked live (scorer `GET /buyback`, surfaced on the home page).
+
+Operationally the keeper holds a hot key. Because the mint authority already lives in the program PDA (not this key), a compromise can never mint $KAIRO; the blast radius is limited to treasury SOL. The hard cap (21M) and burns are both enforced on-chain regardless.

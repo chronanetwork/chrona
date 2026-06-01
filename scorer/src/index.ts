@@ -8,6 +8,7 @@ import { startKeeper } from "./keeper";
 import { getMarketPrices } from "./marketPrice";
 import { getNetworkStats } from "./networkStats";
 import { getBuybackBurnStats } from "./buybackBurn";
+import { startFlywheel } from "./flywheel";
 
 const config = loadConfig();
 const oracle = loadOracleKeypair();
@@ -140,4 +141,23 @@ if (config.keeperEnabled && config.keeperSecretKey) {
   });
 } else {
   console.log("[keeper] disabled (set KEEPER_ENABLED=true and KEEPER_SECRET_KEY)");
+}
+
+// Buyback-and-burn flywheel: turns accumulated treasury fees into $KAIRO burns.
+if (config.flywheelEnabled && config.flywheelSecretKey) {
+  startFlywheel({
+    rpcUrl: config.flywheelRpcUrl,
+    secretKey: config.flywheelSecretKey,
+    payoutWallet: config.flywheelPayoutWallet,
+    reserveSol: config.flywheelReserveSol,
+    triggerSol: config.flywheelTriggerSol,
+    intervalMs: config.flywheelIntervalMs,
+    slippageBps: config.flywheelSlippageBps,
+    maxBuybackSol: config.flywheelMaxBuybackSol,
+    feeBufferSol: config.flywheelFeeBufferSol,
+    jupApiKey: config.jupApiKey,
+    dryRun: config.flywheelDryRun,
+  });
+} else {
+  console.log("[flywheel] disabled (set FLYWHEEL_ENABLED=true and FLYWHEEL_SECRET_KEY)");
 }
