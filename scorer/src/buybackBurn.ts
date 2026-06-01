@@ -7,7 +7,7 @@ const KAIRO = MINT.toBase58();
 const PAGE_TIMEOUT_MS = 15_000;
 const SCAN_BUDGET_MS = 25_000;
 const MAX_PAGES = 30; // up to ~30k txs of dev-wallet history per refresh
-const CACHE_MS = 5 * 60_000;
+const CACHE_MS = 90_000;
 // A KAIRO-receiving tx counts as a buyback only if real SOL went out — this
 // filters out fee-only txs (e.g. a claim mints KAIRO while ~5000 lamports of
 // fee leaves the wallet, which is not a buyback).

@@ -31,7 +31,7 @@ export function BuybackBurn() {
       fetchPrices().then((d) => alive && setP(d)).catch(() => {});
     };
     load();
-    const id = setInterval(load, 120_000);
+    const id = setInterval(load, 60_000);
     return () => {
       alive = false;
       clearInterval(id);
