@@ -39,36 +39,53 @@ function jupBase(apiKey: string): string {
   return apiKey ? "https://api.jup.ag/swap/v1" : "https://lite-api.jup.ag/swap/v1";
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** fetch with retry+backoff on rate limits / transient 5xx (Jupiter gateway). */
+async function jupFetch(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  let res: Response | null = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      res = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+      if (res.status !== 429 && res.status < 500) return res;
+    } catch (e) {
+      if (attempt === 3) throw e;
+    }
+    await sleep(700 * (attempt + 1)); // 0.7s, 1.4s, 2.1s
+  }
+  return res as Response;
+}
+
 /** SOL→$KAIRO ExactIn quote from Jupiter. */
 async function jupQuote(cfg: FlywheelConfig, amountLamports: number): Promise<any> {
   const url =
     `${jupBase(cfg.jupApiKey)}/quote?inputMint=${WSOL}&outputMint=${MINT.toBase58()}` +
     `&amount=${amountLamports}&slippageBps=${cfg.slippageBps}&swapMode=ExactIn`;
-  const res = await fetch(url, {
-    headers: cfg.jupApiKey ? { "x-api-key": cfg.jupApiKey } : {},
-    signal: AbortSignal.timeout(12_000),
-  });
+  const res = await jupFetch(url, { headers: cfg.jupApiKey ? { "x-api-key": cfg.jupApiKey } : {} }, 12_000);
   if (!res.ok) throw new Error(`jup quote ${res.status}: ${await res.text().catch(() => "")}`);
   return res.json();
 }
 
 /** Build the (unsigned) versioned swap tx for a quote. */
 async function jupSwapTx(cfg: FlywheelConfig, quote: any, userPk: string): Promise<VersionedTransaction> {
-  const res = await fetch(`${jupBase(cfg.jupApiKey)}/swap`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...(cfg.jupApiKey ? { "x-api-key": cfg.jupApiKey } : {}) },
-    body: JSON.stringify({
-      quoteResponse: quote,
-      userPublicKey: userPk,
-      wrapAndUnwrapSol: true,
-      dynamicComputeUnitLimit: true,
-      // Cap priority fees so a fee spike can never eat into the reserve.
-      prioritizationFeeLamports: {
-        priorityLevelWithMaxLamports: { maxLamports: 1_000_000, priorityLevel: "high" },
-      },
-    }),
-    signal: AbortSignal.timeout(12_000),
-  });
+  const res = await jupFetch(
+    `${jupBase(cfg.jupApiKey)}/swap`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(cfg.jupApiKey ? { "x-api-key": cfg.jupApiKey } : {}) },
+      body: JSON.stringify({
+        quoteResponse: quote,
+        userPublicKey: userPk,
+        wrapAndUnwrapSol: true,
+        dynamicComputeUnitLimit: true,
+        // Cap priority fees so a fee spike can never eat into the reserve.
+        prioritizationFeeLamports: {
+          priorityLevelWithMaxLamports: { maxLamports: 1_000_000, priorityLevel: "high" },
+        },
+      }),
+    },
+    12_000,
+  );
   if (!res.ok) throw new Error(`jup swap ${res.status}: ${await res.text().catch(() => "")}`);
   const { swapTransaction } = await res.json();
   return VersionedTransaction.deserialize(Buffer.from(swapTransaction, "base64"));
