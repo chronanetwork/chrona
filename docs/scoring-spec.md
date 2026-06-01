@@ -33,7 +33,7 @@ For hold-time, a position only counts if the token was **acquired via a qualifyi
 | `AGE_CAP_DAYS` | 730 | Diminishing returns past ~2 years. |
 | `TRADE_CAP` | 500 | Log saturation point for trade count. |
 | `VOL_CAP` | $1,000,000 | Log saturation point for volume. |
-| `HOLD_CAP_DAYS` | 90 | Hold time saturates at ~3 months. |
+| `HOLD_CAP_DAYS` | 30 | Hold time saturates at ~1 month. |
 | `MIN_HR` | 100 | Floor hash rate (fresh wallet — low but nonzero). |
 | `MAX_HR` | 10,000 | Ceiling hash rate (keeps the system fair). |
 

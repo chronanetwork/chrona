@@ -1,5 +1,14 @@
 import assert from "node:assert";
 import { test } from "node:test";
+import {
+  AGE_CAP_DAYS,
+  HOLD_CAP_DAYS,
+  MAX_SCORE,
+  MIN_SCORE,
+  TRADE_CAP,
+  VOL_CAP,
+  WEIGHTS,
+} from "@kairo/sdk";
 import { computeScore } from "../src/score";
 
 test("fresh wallet floors at MIN_SCORE", () => {
@@ -39,15 +48,15 @@ test("more activity never lowers the score", () => {
 });
 
 test("a known reference vector", () => {
-  // age 365d, 50 trades, $50k volume, 30d median hold
-  const s = computeScore({ ageDays: 365, nTrades: 50, usdVolume: 50_000, medianHoldDays: 30 });
-  // recompute expected by hand-rolled formula to lock the contract
+  // age 365d, 50 trades, $50k volume, 15d median hold
+  const s = computeScore({ ageDays: 365, nTrades: 50, usdVolume: 50_000, medianHoldDays: 15 });
+  // recompute expected from the live SDK constants so this stays in sync
   const clamp = (x: number) => Math.min(1, Math.max(0, x));
-  const age = clamp(Math.log1p(365) / Math.log1p(730));
-  const tr = clamp(Math.log1p(50) / Math.log1p(500));
-  const vol = clamp(Math.log1p(50_000) / Math.log1p(1_000_000));
-  const hold = clamp(30 / 90);
-  const raw = 0.25 * age + 0.2 * tr + 0.3 * vol + 0.25 * hold;
-  const expected = Math.round(100 + raw * 9900);
+  const age = clamp(Math.log1p(365) / Math.log1p(AGE_CAP_DAYS));
+  const tr = clamp(Math.log1p(50) / Math.log1p(TRADE_CAP));
+  const vol = clamp(Math.log1p(50_000) / Math.log1p(VOL_CAP));
+  const hold = clamp(15 / HOLD_CAP_DAYS);
+  const raw = WEIGHTS.age * age + WEIGHTS.trade * tr + WEIGHTS.vol * vol + WEIGHTS.hold * hold;
+  const expected = Math.round(MIN_SCORE + raw * (MAX_SCORE - MIN_SCORE));
   assert.strictEqual(s.hashRate, expected);
 });

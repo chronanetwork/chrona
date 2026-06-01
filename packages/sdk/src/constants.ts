@@ -35,7 +35,7 @@ export const MIN_TRADE_USD = 10;
 export const AGE_CAP_DAYS = 730;
 export const TRADE_CAP = 500;
 export const VOL_CAP = 1_000_000;
-export const HOLD_CAP_DAYS = 90;
+export const HOLD_CAP_DAYS = 30;
 export const WEIGHTS = { age: 0.25, trade: 0.2, vol: 0.3, hold: 0.25 } as const;
 
 // ---- PDA seeds ----
