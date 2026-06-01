@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useConnection, useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { projectedDailyKairo } from "@kairo/sdk";
@@ -26,38 +26,47 @@ export function Mining() {
   const [global, setGlobal] = useState<any>(null);
   const [miner, setMiner] = useState<any>(null);
   const [preview, setPreview] = useState<any>(null);
+  const [previewing, setPreviewing] = useState(false);
   const [claimable, setClaimable] = useState(0);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
-  const program = anchorWallet ? getProgram(connection, anchorWallet) : null;
+  // Stable program instance — only rebuilt when the wallet/connection changes.
+  const program = useMemo(
+    () => (anchorWallet ? getProgram(connection, anchorWallet) : null),
+    [connection, anchorWallet],
+  );
 
   const refresh = useCallback(async () => {
     if (!program || !publicKey) return;
     try {
-      const g = await fetchGlobal(program);
-      setGlobal(g);
-      const m = await fetchMiner(program, publicKey);
-      setMiner(m);
+      setGlobal(await fetchGlobal(program));
+      setMiner(await fetchMiner(program, publicKey));
     } catch (e: any) {
       setMsg(String(e.message ?? e));
     }
   }, [program, publicKey]);
 
+  // Fetch on connect, then poll gently (every 30s) — not on every render.
   useEffect(() => {
+    if (!program || !publicKey) return;
     refresh();
-  }, [refresh]);
+    const id = setInterval(refresh, 30_000);
+    return () => clearInterval(id);
+  }, [program, publicKey, refresh]);
 
-  // Score preview when connected and not yet mining.
+  // Free score preview once, when connected and not yet mining.
+  const previewKey = publicKey?.toBase58();
   useEffect(() => {
-    if (publicKey && !miner && !preview) {
-      previewScore(publicKey.toBase58())
-        .then(setPreview)
-        .catch(() => setMsg("Scorer unavailable — set NEXT_PUBLIC_SCORER_URL."));
-    }
-  }, [publicKey, miner, preview]);
+    if (!previewKey || miner || preview || previewing) return;
+    setPreviewing(true);
+    previewScore(previewKey)
+      .then(setPreview)
+      .catch(() => setMsg("Couldn't reach the scorer right now — try again shortly."))
+      .finally(() => setPreviewing(false));
+  }, [previewKey, miner, preview, previewing]);
 
-  // Live claimable ticker.
+  // Live claimable ticker (pure client-side math — no RPC).
   useEffect(() => {
     if (!global || !miner) return;
     const tick = () =>
@@ -70,14 +79,14 @@ export function Mining() {
   const onMine = async () => {
     if (!program || !publicKey) return;
     setBusy(true);
-    setMsg("Requesting signed attestation…");
+    setMsg("Requesting your signed score…");
     try {
       const att = await fetchAttestation(publicKey.toBase58());
-      setMsg("Approve the transaction to start mining…");
+      setMsg("Approve the transaction in your wallet to start mining…");
       const tx = await buildInitializeMinerTx(program, publicKey, att);
       const sig = await sendTransaction(tx, connection);
       await connection.confirmTransaction(sig, "confirmed");
-      setMsg(`Mining! tx ${sig.slice(0, 8)}…`);
+      setMsg("You're mining! 🎉");
       await refresh();
     } catch (e: any) {
       setMsg(String(e.message ?? e));
@@ -89,12 +98,12 @@ export function Mining() {
   const onClaim = async () => {
     if (!program || !publicKey) return;
     setBusy(true);
-    setMsg("Approve the claim transaction…");
+    setMsg("Approve the claim in your wallet…");
     try {
       const tx = await buildClaimTx(program, publicKey);
       const sig = await sendTransaction(tx, connection);
       await connection.confirmTransaction(sig, "confirmed");
-      setMsg(`Claimed! tx ${sig.slice(0, 8)}…`);
+      setMsg("Claimed — $KAIRO sent to your wallet.");
       await refresh();
     } catch (e: any) {
       setMsg(String(e.message ?? e));
@@ -108,85 +117,85 @@ export function Mining() {
   const elapsed = genesis ? Math.floor(Date.now() / 1000) - genesis : 0;
   const score = miner ? Number(miner.hashRate.toString()) : preview?.score ?? 0;
   const dailyProjection = projectedDailyKairo(score, totalHr || score || 1, elapsed);
+  const bd = preview?.breakdown;
 
   if (!publicKey) {
     return (
-      <div className="panel" style={{ textAlign: "center" }}>
-        <p className="sub">Connect a wallet to see your hash rate.</p>
-        <WalletMultiButton />
+      <div className="card" style={{ textAlign: "center" }}>
+        <h3 style={{ fontSize: 22 }}>Connect your wallet</h3>
+        <p className="muted" style={{ margin: "8px auto 18px", maxWidth: "40ch", lineHeight: 1.55 }}>
+          See your hash rate for free — no transaction, no commitment. Connecting only reads your
+          public address.
+        </p>
+        <div style={{ display: "inline-flex" }}>
+          <WalletMultiButton />
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="panel">
-        <div className="big">{fmt(score, 0)}</div>
-        <div className="sub">{miner ? "your hash rate" : "your hash rate (preview)"}</div>
+    <div style={{ display: "grid", gap: 16 }}>
+      <div className="card">
+        <div className="stat-big">{previewing && !score ? "…" : fmt(score, 0)}</div>
+        <div className="stat-sub">{miner ? "your hash rate" : "your hash rate · preview"}</div>
 
-        {preview?.breakdown && !miner && (
-          <>
-            <Factor label="Wallet age" v={preview.breakdown.ageScore} />
-            <Factor label="Trades" v={preview.breakdown.tradeScore} />
-            <Factor label="Volume" v={preview.breakdown.volScore} />
-            <Factor label="Hold time" v={preview.breakdown.holdScore} />
-          </>
+        {bd && !miner && (
+          <div style={{ marginTop: 18 }}>
+            <Factor label="Wallet age" v={bd.ageScore} />
+            <Factor label="Trades" v={bd.tradeScore} />
+            <Factor label="Volume" v={bd.volScore} />
+            <Factor label="Hold time" v={bd.holdScore} />
+          </div>
         )}
 
-        <div className="row">
-          <span className="k">Projected / day</span>
-          <span>{fmt(dailyProjection)} KAIRO</span>
+        <div style={{ marginTop: 14 }}>
+          <div className="kv">
+            <span className="k">Projected per day</span>
+            <span className="v">{fmt(dailyProjection)} KAIRO</span>
+          </div>
+          {global && (
+            <div className="kv">
+              <span className="k">Network hash rate</span>
+              <span className="v">{fmt(totalHr, 0)}</span>
+            </div>
+          )}
         </div>
-        {global && (
-          <div className="row">
-            <span className="k">Network hash rate</span>
-            <span>{fmt(totalHr, 0)}</span>
-          </div>
-        )}
 
-        {!miner ? (
-          <div style={{ marginTop: 16 }}>
-            <button className="action" disabled={busy} onClick={onMine}>
-              {busy ? "Working…" : "Start mining · 0.1 SOL"}
-            </button>
-          </div>
-        ) : null}
+        {!miner && (
+          <button className="btn full" style={{ marginTop: 18 }} disabled={busy} onClick={onMine}>
+            {busy ? "Working…" : "Start mining · 0.1 SOL"}
+          </button>
+        )}
       </div>
 
       {miner && (
-        <div className="panel">
-          <div className="sub" style={{ marginTop: 0 }}>claimable now</div>
-          <div className="big">{fmt(claimable)}</div>
-          <div className="sub">KAIRO</div>
-          <button className="action" disabled={busy || claimable <= 0} onClick={onClaim}>
+        <div className="card" style={{ textAlign: "center" }}>
+          <div className="stat-sub" style={{ marginTop: 0 }}>claimable now</div>
+          <div className="stat-big">{fmt(claimable)}</div>
+          <div className="stat-sub">KAIRO</div>
+          <button
+            className="btn full"
+            style={{ marginTop: 18 }}
+            disabled={busy || claimable <= 0}
+            onClick={onClaim}
+          >
             {busy ? "Working…" : "Claim"}
           </button>
         </div>
       )}
 
-      <div className="panel" style={{ display: "flex", justifyContent: "space-between" }}>
-        <WalletMultiButton />
-        <button
-          onClick={refresh}
-          style={{ background: "transparent", color: "var(--muted)", border: "none", cursor: "pointer" }}
-        >
-          refresh
-        </button>
-      </div>
-
       {msg && <p className="msg">{msg}</p>}
-    </>
+    </div>
   );
 }
 
 function Factor({ label, v }: { label: string; v: number }) {
   return (
-    <div className="row">
+    <div className="factor">
       <span className="k">{label}</span>
-      <span style={{ width: 140 }}>
-        <span className="bar">
-          <span style={{ width: `${Math.round((v ?? 0) * 100)}%` }} />
-        </span>
+      <span className="track">
+        <span style={{ width: `${Math.round((v ?? 0) * 100)}%` }} />
       </span>
     </div>
   );

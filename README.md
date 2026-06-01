@@ -1,10 +1,16 @@
 <div align="center">
 
+<img src="assets/logo.png" alt="Kairo" width="108" height="108" />
+
 # Kairo
 
-**Proof of Activity. Mined by the wallets that actually use Solana.**
+### Rewarding real activity on-chain.
 
-`$KAIRO` is an SPL token you don't buy your way into — you earn it by having been *active* on Solana. Your wallet's real history is its mining rig.
+**Proof of Activity — mined by the wallets that actually use Solana.**
+
+`$KAIRO` is an SPL token you don't buy your way into. You earn it by having been *active* on Solana: your wallet's real history — age, trades, volume, conviction — is its mining rig.
+
+[Website](https://kairo.win) · [X / Twitter](https://x.com/MineKairo) · [Docs](docs/)
 
 </div>
 

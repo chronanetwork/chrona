@@ -25,3 +25,8 @@ out/
 
 # Server deploy configs (contain infra details)
 deploy/
+
+# Brand source/scratch images dropped in repo root (committed copies live in app/public & assets)
+/Kairo.png
+/c1b817e4-96fb-4c67-a2ac-5f41aeb3805b.png
+/HJrpqJ0XMAQEgL3.jpg
